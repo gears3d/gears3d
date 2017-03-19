@@ -106,7 +106,7 @@ int main(int argc, char **argv)
     if (!ok)
         return EXIT_FAILURE;
 
-    drawer = 1 ? &gl32_core_drawer : &gl21_compat_drawer;
+    drawer = gears_options.compat ? &gl21_compat_drawer : &gl32_core_drawer;
 
     sdl_start();
 
