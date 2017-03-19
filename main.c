@@ -100,6 +100,12 @@ bool sdl_start()
 
 int main(int argc, char **argv)
 {
+    bool ok;
+
+    ok = parse_options(argc, argv);
+    if (!ok)
+        return EXIT_FAILURE;
+
     drawer = 1 ? &gl32_core_drawer : &gl21_compat_drawer;
 
     sdl_start();

@@ -21,4 +21,6 @@ struct gears_drawer {
 extern struct gears_drawer gl32_core_drawer;
 extern struct gears_drawer gl21_compat_drawer;
 
+bool parse_options(int argc, char **argv);
+
 #endif
