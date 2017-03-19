@@ -17,7 +17,7 @@ foreach d : dep_libs_str.split()
     deps += [ c_compiler.find_library(d) ]
 endforeach
 
-srcs = 'main.c gl21_compat.c gl32_core.c gl_shader.c'
+srcs = 'main.c g_math.c gl21_compat.c gl32_core.c gl_shader.c'
 srcs = srcs.split()
 
 executable('gears3d', srcs, dependencies: deps)
