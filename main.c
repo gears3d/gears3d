@@ -100,7 +100,7 @@ bool sdl_start()
 
 int main(int argc, char **argv)
 {
-    drawer = 0 ? &gl32_core_drawer : &gl21_compat_drawer;
+    drawer = 1 ? &gl32_core_drawer : &gl21_compat_drawer;
 
     sdl_start();
 
