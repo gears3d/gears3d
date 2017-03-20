@@ -19,6 +19,7 @@ enum long_option_values {
     OPT_HELP = 'h',
     OPT_GL_CORE = 0x10000,
     OPT_GL_COMPAT,
+    OPT_GL_ES,
     OPT_VSYNC,
     OPT_MAX_TIME,
 };
@@ -59,6 +60,7 @@ print_help(void)
            LN("optional arguments:")
            LN("  --gl-compat           run with OpenGL compatibility profile")
            LN("  --gl-core             run with OpenGL core profile")
+           LN("  --gles                run with OpenGLES")
            LN("  --max-time=ms         run for specified number of milliseconds")
            LN("  --vsync               run syncronized with monitor refresh")
            LN("  -h, --help            display help message and exit"));
@@ -71,6 +73,7 @@ parse_options(int argc, char **argv)
         { "help",               OPT_HELP,               OPTPARSE_NONE },
         { "gl-compat",          OPT_GL_COMPAT,          OPTPARSE_NONE },
         { "gl-core",            OPT_GL_CORE,            OPTPARSE_NONE },
+        { "gles",               OPT_GL_ES,              OPTPARSE_NONE },
         { "max-time",           OPT_MAX_TIME,           OPTPARSE_REQUIRED },
         { "vsync",              OPT_VSYNC,              OPTPARSE_NONE },
         { 0 },
@@ -95,6 +98,9 @@ parse_options(int argc, char **argv)
             break;
         case OPT_GL_CORE:
             gears_options.core = true;
+            break;
+        case OPT_GL_ES:
+            gears_options.es = true;
             break;
         case OPT_MAX_TIME:
             ok = str_to_uint64(options.optarg, &gears_options.max_time_ms);

@@ -108,7 +108,15 @@ int main(int argc, char **argv)
     if (!ok)
         return EXIT_FAILURE;
 
-    drawer = gears_options.compat ? &gl21_compat_drawer : &gl32_core_drawer;
+    if (gears_options.core) {
+        drawer = &gl32_core_drawer;
+    } else if (gears_options.compat) {
+        drawer = &gl21_compat_drawer;
+    } else if (gears_options.es) {
+        drawer = &gles30_drawer;
+    } else {
+        drawer = &gl32_core_drawer;
+    }
 
     sdl_start();
 
