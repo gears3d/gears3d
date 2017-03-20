@@ -85,7 +85,9 @@ bool sdl_start()
     assert(version);
     printf("GL Version: %s\n", version);
 
-    if (SDL_GL_SetSwapInterval(-1 /* late swap tearing */) == -1) {
+    if (gears_options.vsync) {
+        SDL_GL_SetSwapInterval(1);
+    } else if (SDL_GL_SetSwapInterval(-1 /* late swap tearing */) == -1) {
         /* late swap setup failed */
         SDL_GL_SetSwapInterval(0 /* immediate updates */);
     }

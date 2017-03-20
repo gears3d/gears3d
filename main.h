@@ -24,6 +24,7 @@ extern struct gears_drawer gl21_compat_drawer;
 struct gears_options {
     bool compat;
     bool core;
+    bool vsync;
 };
 
 bool parse_options(int argc, char **argv);

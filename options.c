@@ -18,6 +18,7 @@ enum long_option_values {
     OPT_HELP = 'h',
     OPT_GL_CORE = 0x10000,
     OPT_GL_COMPAT,
+    OPT_VSYNC,
 };
 
 static void
@@ -29,6 +30,7 @@ print_help(void)
            LN("optional arguments:")
            LN("  --gl-compat           run with OpenGL compatibility profile")
            LN("  --gl-core             run with OpenGL core profile")
+           LN("  --vsync               run syncronized with monitor refresh")
            LN("  -h, --help            display help message and exit"));
 }
 
@@ -39,6 +41,7 @@ parse_options(int argc, char **argv)
         { "help",               OPT_HELP,               OPTPARSE_NONE },
         { "gl-compat",          OPT_GL_COMPAT,          OPTPARSE_NONE },
         { "gl-core",            OPT_GL_CORE,            OPTPARSE_NONE },
+        { "vsync",              OPT_VSYNC,              OPTPARSE_NONE },
         { 0 },
     };
     struct optparse options;
@@ -60,6 +63,9 @@ parse_options(int argc, char **argv)
             break;
         case OPT_GL_CORE:
             gears_options.core = true;
+            break;
+        case OPT_VSYNC:
+            gears_options.vsync = true;
             break;
         case '?':
             printf("Unknown option!\n\n");
