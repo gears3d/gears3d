@@ -124,11 +124,21 @@ int main(int argc, char **argv)
         total_frames++;
         t2 = SDL_GetTicks();
 
-        if ((t2 - t1) >= 5000) {
+        if (gears_options.max_time_ms != 0 &&
+            (t2 - start_time) >= gears_options.max_time_ms) {
+            done = true;
+        }
+
+        if ((t2 - t1) >= 5000 || done) {
             const int frames = total_frames - start_frame;
             const float time = (t2 - t1) / 1000.0;
             const float fps = frames / time;
-            printf("%d frames in %.1f seconds = %.3f FPS\n", frames, time, fps);
+            const char *fmt =
+                (t2 - t1) > 1000 ?
+                "%d frames in %.1f seconds = %.3f FPS\n" :
+                "%d frames in %.3f seconds = %.3f FPS\n";
+
+            printf(fmt, frames, time, fps);
             t1 = t2;
             start_frame = total_frames;
         }

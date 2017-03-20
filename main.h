@@ -25,6 +25,7 @@ struct gears_options {
     bool compat;
     bool core;
     bool vsync;
+    uint64_t max_time_ms;
 };
 
 bool parse_options(int argc, char **argv);
