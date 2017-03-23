@@ -18,7 +18,7 @@ foreach d : dep_libs_str.split()
 endforeach
 
 srcs = 'main.c g_math.c'
-srcs += ' gl21_compat.c gl32_core.c gles30.c'
+srcs += ' gl21_compat.c gl32_core.c gles20.c gles30.c'
 srcs += ' gl_shader.c options.c vert_buf.c'
 srcs = srcs.split()
 

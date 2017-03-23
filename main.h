@@ -20,6 +20,7 @@ struct gears_drawer {
 
 extern struct gears_drawer gl32_core_drawer;
 extern struct gears_drawer gl21_compat_drawer;
+extern struct gears_drawer gles20_drawer;
 extern struct gears_drawer gles30_drawer;
 
 struct gears_options {

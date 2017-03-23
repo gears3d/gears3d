@@ -113,7 +113,7 @@ int main(int argc, char **argv)
     } else if (gears_options.compat) {
         drawer = &gl21_compat_drawer;
     } else if (gears_options.es) {
-        drawer = &gles30_drawer;
+        drawer = &gles20_drawer;
     } else {
         drawer = &gl32_core_drawer;
     }
