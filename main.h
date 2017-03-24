@@ -12,6 +12,7 @@
 
 struct gears_drawer {
     void (*set_window_attributes)(void);
+    struct gears_drawer* (*upgrade_drawer)(void);
     void (*set_global_state)(void);
     void (*resize)(int width, int height);
     void (*draw)(void);

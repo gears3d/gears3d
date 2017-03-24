@@ -62,6 +62,46 @@ set_window_attributes()
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
 }
 
+static struct gears_drawer*
+upgrade_drawer(void)
+{
+    const GLubyte *version;
+    static const char prefix[] = "OpenGL ES ";
+
+    version = glGetString(GL_VERSION);
+    assert(version);
+    if (strncmp(prefix, (const char *)version, sizeof(prefix) - 1) != 0)
+        return &gles20_drawer;
+
+    const char *major_start = (const char *)&version[sizeof(prefix) - 1];
+    if (!isdigit(*major_start))
+        return &gles20_drawer;
+
+    const char *dot = major_start;
+    do {
+        if (*major_start == '0' && isdigit(*(major_start + 1)))
+            major_start++;
+        dot++;
+    } while(isdigit(*dot));
+
+    if (*dot != '.')
+        return &gles20_drawer;
+
+    const char *minor_start = dot + 1;
+    if (!isdigit(*minor_start))
+        return &gles20_drawer;
+
+    const char *minor_end = minor_start;
+    do {
+        if (*minor_start == '0' && isdigit(*(minor_start + 1)))
+            minor_start++;
+        minor_end++;
+    } while(isdigit(*minor_end));
+
+    int major = atoi(major_start);
+    return (major >= 3) ? &gles30_drawer : &gles20_drawer;
+}
+
 #define GEARS 3
 
 struct gear_info {
@@ -302,6 +342,7 @@ destruct()
 
 struct gears_drawer gles20_drawer = {
     .set_window_attributes = set_window_attributes,
+    .upgrade_drawer = upgrade_drawer,
     .set_global_state = set_global_state,
     .resize = win_resize,
     .draw = draw,

@@ -120,6 +120,9 @@ int main(int argc, char **argv)
 
     sdl_start();
 
+    if (drawer->upgrade_drawer)
+        drawer = drawer->upgrade_drawer();
+
     uint64_t total_frames = 0, start_frame = 0;
     drawer->set_global_state();
     drawer->resize(width, height);
