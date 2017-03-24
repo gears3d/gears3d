@@ -6,6 +6,7 @@
 #include "main.h"
 #include "gl.h"
 #include "g_math.h"
+#include "vert_buf.h"
 
 #include <SDL.h>
 #include <SDL_opengl.h>
@@ -75,6 +76,7 @@ struct gear_info {
     GLfloat color[4];
     mat4 model;
     float angle;
+    uint32_t num_vertices, vertex_buf_offset;
 };
 
 static struct gear_info gears[GEARS] = {
@@ -100,130 +102,6 @@ static struct gear_info gears[GEARS] = {
         .color = { 0.2, 0.2, 1.0, 1.0 },
     },
 };
-
-#define TOOTH_VERTS 38
-
-#pragma pack(1)
-
-struct tooth_vert {
-    struct vec3 pos;
-    struct vec3 rel_norm;
-};
-
-struct tooth_verts {
-    struct tooth_vert v[TOOTH_VERTS];
-};
-
-#pragma pack()
-
-static void
-add_vert(struct tooth_vert **next_vert, GLfloat x, GLfloat y, GLfloat z,
-         const struct vec3 *normal)
-{
-    assert(next_vert != NULL && *next_vert != NULL);
-    (*next_vert)->pos.x = x;
-    (*next_vert)->pos.y = y;
-    (*next_vert)->pos.z = z;
-
-    (*next_vert)->rel_norm.x = normal->x;
-    (*next_vert)->rel_norm.y = normal->y;
-    (*next_vert)->rel_norm.z = normal->z;
-    (*next_vert)++;
-}
-
-static void
-add_vert_mult_xy_norm(struct tooth_vert **next_vert, GLfloat x, GLfloat y,
-                      GLfloat z, float mult)
-{
-    struct vec3 norm_tmp = { mult * x - x, mult * y - y, 0.0 };
-    add_vert(next_vert, x, y, z, &norm_tmp);
-}
-
-static void
-tooth(struct tooth_verts *verts, GLfloat inner_radius, GLfloat outer_radius,
-      GLfloat width, GLint teeth, GLfloat tooth_depth)
-{
-    const GLfloat r0 = inner_radius;
-    const GLfloat r1 = outer_radius - tooth_depth / 2.0;
-    const GLfloat r2 = outer_radius + tooth_depth / 2.0;
-    const double da = M_PI / teeth / 2.0;
-    const GLfloat half_width = 0.5 * width;
-    const double dcos[] =
-        { 1.0, cos(da), cos(2 * da), cos(3 * da), cos(4 * da) };
-    const double dsin[] =
-        { 0.0, sin(da), sin(2 * da), sin(3 * da), sin(4 * da) };
-    struct tooth_vert *nv = &verts->v[0];
-
-    static const struct vec3 pos_z = { 0.0, 0.0, 1.0 };
-    static const struct vec3 neg_z = { 0.0, 0.0, -1.0 };
-    struct vec3 norm_tmp;
-
-    /* front face of tooth */
-    add_vert(&nv, dcos[1] * r2, dsin[1] * r2, half_width, &pos_z);
-    add_vert(&nv, dcos[2] * r2, dsin[2] * r2, half_width, &pos_z);
-    add_vert(&nv, dcos[0] * r1, dsin[0] * r1, half_width, &pos_z);
-    add_vert(&nv, dcos[3] * r1, dsin[3] * r1, half_width, &pos_z);
-
-    /* front face of gear */
-    add_vert(&nv, dcos[4] * r1, dsin[4] * r1, half_width, &pos_z);
-    add_vert(&nv, dcos[4] * r1, dsin[4] * r1, half_width, &pos_z);
-    add_vert(&nv, dcos[0] * r1, dsin[0] * r1, half_width, &pos_z);
-    add_vert(&nv, dcos[4] * r0, dsin[4] * r0, half_width, &pos_z);
-    add_vert(&nv, dcos[0] * r0, dsin[0] * r0, half_width, &pos_z);
-
-    /* inner cylinder */
-    add_vert_mult_xy_norm(&nv, dcos[4] * r0, dsin[4] * r0, half_width, 0.5);
-    add_vert_mult_xy_norm(&nv, dcos[0] * r0, dsin[0] * r0, half_width, 0.5);
-    add_vert_mult_xy_norm(&nv, dcos[4] * r0, dsin[4] * r0, -half_width, 0.5);
-    add_vert_mult_xy_norm(&nv, dcos[0] * r0, dsin[0] * r0, -half_width, 0.5);
-
-    /* back face of gear (first 2 are degenerate to reset normal) */
-    add_vert(&nv, dcos[4] * r0, dsin[4] * r0, -half_width, &neg_z);
-    add_vert(&nv, dcos[0] * r0, dsin[0] * r0, -half_width, &neg_z);
-    add_vert(&nv, dcos[4] * r1, dsin[4] * r1, -half_width, &neg_z);
-    add_vert(&nv, dcos[0] * r1, dsin[0] * r1, -half_width, &neg_z);
-    add_vert(&nv, dcos[3] * r1, dsin[3] * r1, -half_width, &neg_z);
-
-    /* back face of tooth */
-    add_vert(&nv, dcos[1] * r2, dsin[1] * r2, -half_width, &neg_z);
-    add_vert(&nv, dcos[2] * r2, dsin[2] * r2, -half_width, &neg_z);
-
-    /* two degenerate triangles to jump to drawing the outer edge of gear */
-    add_vert_mult_xy_norm(&nv, dcos[2] * r2, dsin[2] * r2, -half_width, 2.0);
-    add_vert_mult_xy_norm(&nv, dcos[4] * r1, dsin[4] * r1, -half_width, 2.0);
-
-    /* tooth recess outer edge */
-    add_vert_mult_xy_norm(&nv, dcos[4] * r1, dsin[4] * r1, -half_width, 2.0);
-    add_vert_mult_xy_norm(&nv, dcos[4] * r1, dsin[4] * r1, half_width, 2.0);
-    add_vert_mult_xy_norm(&nv, dcos[3] * r1, dsin[3] * r1, -half_width, 2.0);
-    add_vert_mult_xy_norm(&nv, dcos[3] * r1, dsin[3] * r1, half_width, 2.0);
-
-    /* tooth leading edge (first 2 are degenerate to reset normal) */
-    norm_tmp.x = dsin[3] * r1 - dsin[2] * r2;
-    norm_tmp.y = dcos[2] * r2 - dcos[3] * r1;
-    norm_tmp.z = 0.0;
-    add_vert(&nv, dcos[3] * r1, dsin[3] * r1, -half_width, &norm_tmp);
-    add_vert(&nv, dcos[3] * r1, dsin[3] * r1, half_width, &norm_tmp);
-    add_vert(&nv, dcos[2] * r2, dsin[2] * r2, -half_width, &norm_tmp);
-    add_vert(&nv, dcos[2] * r2, dsin[2] * r2, half_width, &norm_tmp);
-
-    /* tooth top edge (first 2 are degenerate to reset normal) */
-    add_vert_mult_xy_norm(&nv, dcos[2] * r2, dsin[2] * r2, -half_width, 2.0);
-    add_vert_mult_xy_norm(&nv, dcos[2] * r2, dsin[2] * r2, half_width, 2.0);
-    add_vert_mult_xy_norm(&nv, dcos[1] * r2, dsin[1] * r2, -half_width, 2.0);
-    add_vert_mult_xy_norm(&nv, dcos[1] * r2, dsin[1] * r2, half_width, 2.0);
-
-    /* tooth trailing edge (first 2 are degenerate to reset normal) */
-    norm_tmp.x = dsin[0] * r1 - dsin[1] * r2;
-    norm_tmp.y = dcos[0] * r1 - dcos[1] * r2;
-    norm_tmp.z = 0.0;
-    add_vert(&nv, dcos[1] * r2, dsin[1] * r2, -half_width, &norm_tmp);
-    add_vert(&nv, dcos[1] * r2, dsin[1] * r2, half_width, &norm_tmp);
-    add_vert(&nv, dcos[0] * r1, dsin[0] * r1, -half_width, &norm_tmp);
-    add_vert(&nv, dcos[0] * r1, dsin[0] * r1, half_width, &norm_tmp);
-
-    assert(nv - &verts->v[0] == TOOTH_VERTS);
-}
 
 static void
 rotate_gears(float x, float y, float z)
@@ -342,26 +220,38 @@ set_gl_core_state()
     glGenVertexArrays(1, &vao);
     glBindVertexArray(vao);
 
-    struct tooth_verts teeth_verts[GEARS];
+    uint32_t total_vertex_count = 0;
     for (i = 0; i < GEARS; i++) {
-        tooth(&teeth_verts[i], gears[i].inner_radius, gears[i].outer_radius,
-              gears[i].width, gears[i].teeth, gears[i].tooth_depth);
+        gears[i].vertex_buf_offset = total_vertex_count;
+        gears[i].num_vertices = tooth_vertex_count();
+        total_vertex_count += gears[i].num_vertices;
+    }
+
+    struct gear_vert *vert_buffer =
+        malloc(total_vertex_count * sizeof(struct gear_vert));
+    assert(vert_buffer != NULL);
+
+    for (i = 0; i < GEARS; i++) {
+        fill_tooth_vertices(vert_buffer + gears[i].vertex_buf_offset,
+                            gears[i].inner_radius, gears[i].outer_radius,
+                            gears[i].width, gears[i].teeth,
+                            gears[i].tooth_depth);
     }
 
     glGenBuffers(1, &vert_bo);
     glBindBuffer(GL_ARRAY_BUFFER, vert_bo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(teeth_verts), &teeth_verts,
-                 GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, total_vertex_count * sizeof(struct gear_vert),
+                 vert_buffer, GL_STATIC_DRAW);
     ok = gl_attrib_ptr(program, "vertex",
-                       sizeof(teeth_verts[0].v[0].pos) / sizeof(GLfloat),
-                       GL_FLOAT, GL_FALSE, sizeof(teeth_verts[0].v[0]), 0);
+                       sizeof(vert_buffer->pos) / sizeof(GLfloat),
+                       GL_FLOAT, GL_FALSE, sizeof(*vert_buffer), 0);
     assert(ok);
     ok = gl_attrib_ptr(program, "rel_norm",
-                       sizeof(teeth_verts[0].v[0].rel_norm) / sizeof(GLfloat),
-                       GL_FLOAT, GL_FALSE, sizeof(teeth_verts[0].v[0]),
-                       (uint8_t*)&teeth_verts[0].v[0].rel_norm -
-                           (uint8_t*)&teeth_verts[0]);
+                       sizeof(vert_buffer->norm) / sizeof(GLfloat),
+                       GL_FLOAT, GL_FALSE, sizeof(*vert_buffer),
+                       (uint8_t*)&vert_buffer->norm - (uint8_t*)vert_buffer);
     assert(ok);
+    free(vert_buffer);
 
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
@@ -409,8 +299,8 @@ gl_core_draw()
         glUniform4fv(uniforms.gear_color.loc, 1, gears[i].color);
         glUniformMatrix4fv(uniforms.model.loc, 1, GL_FALSE,
                            (void*)gears[i].model);
-        glDrawArraysInstanced(GL_TRIANGLE_STRIP, i * TOOTH_VERTS, TOOTH_VERTS,
-                              gears[i].teeth);
+        glDrawArraysInstanced(GL_TRIANGLE_STRIP, gears[i].vertex_buf_offset,
+                              gears[i].num_vertices, gears[i].teeth);
     }
 }
 
