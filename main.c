@@ -123,6 +123,9 @@ int main(int argc, char **argv)
     if (drawer->upgrade_drawer)
         drawer = drawer->upgrade_drawer();
 
+    if (drawer->name)
+        printf("Drawing implementation: %s\n", drawer->name);
+
     uint64_t total_frames = 0, start_frame = 0;
     drawer->set_global_state();
     drawer->resize(width, height);

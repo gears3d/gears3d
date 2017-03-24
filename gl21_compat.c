@@ -266,6 +266,7 @@ gl_compat_destruct()
 }
 
 struct gears_drawer gl21_compat_drawer = {
+    .name = "OpenGL Compatibility Profile Gears",
     .set_window_attributes = set_gl_compat_attributes,
     .set_global_state = set_gl_compat_state,
     .resize = win_resize,

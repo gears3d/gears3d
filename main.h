@@ -11,6 +11,7 @@
 #include <stdint.h>
 
 struct gears_drawer {
+    const char *name;
     void (*set_window_attributes)(void);
     struct gears_drawer* (*upgrade_drawer)(void);
     void (*set_global_state)(void);

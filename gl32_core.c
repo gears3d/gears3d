@@ -420,6 +420,7 @@ gl_core_destruct()
 }
 
 struct gears_drawer gl32_core_drawer = {
+    .name = "OpenGL 3.2 Core Profile Gears",
     .set_window_attributes = set_gl_core_attributes,
     .set_global_state = set_gl_core_state,
     .resize = win_resize,
