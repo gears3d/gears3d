@@ -302,6 +302,8 @@ draw()
         glDrawArraysInstanced(GL_TRIANGLE_STRIP, gears[i].vertex_buf_offset,
                               gears[i].num_vertices, gears[i].teeth);
     }
+
+    gl_swapbuffers();
 }
 
 static void

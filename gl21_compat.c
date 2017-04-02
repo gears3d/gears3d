@@ -255,6 +255,8 @@ gl_compat_draw()
     glPopMatrix();
 
     glPopMatrix();
+
+    gl_swapbuffers();
 }
 
 static void

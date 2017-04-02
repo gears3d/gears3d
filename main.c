@@ -100,6 +100,12 @@ bool sdl_start()
     return true;
 }
 
+void
+gl_swapbuffers()
+{
+    SDL_GL_SwapWindow(window);
+}
+
 int main(int argc, char **argv)
 {
     bool ok;
@@ -134,7 +140,6 @@ int main(int argc, char **argv)
     while (!done) {
         handle_event(true);
         drawer->draw();
-        SDL_GL_SwapWindow(window);
         total_frames++;
         t2 = SDL_GetTicks();
 

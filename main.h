@@ -36,4 +36,6 @@ struct gears_options {
 bool parse_options(int argc, char **argv);
 extern struct gears_options gears_options;
 
+void gl_swapbuffers();
+
 #endif

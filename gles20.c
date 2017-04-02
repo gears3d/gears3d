@@ -333,6 +333,8 @@ draw()
         glDrawArrays(GL_TRIANGLE_STRIP, gears[i].vertex_buf_offset,
                      gears[i].num_vertices);
     }
+
+    gl_swapbuffers();
 }
 
 static void
