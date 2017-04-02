@@ -208,24 +208,14 @@ set_gl_compat_state()
 }
 
 static void
-update_angle(void)
+update_angle(float in_angle)
 {
-  static double t0 = -1.;
-  double dt, t = SDL_GetTicks() / 1000.0;
-  if (t0 < 0.0)
-    t0 = t;
-  dt = t - t0;
-  t0 = t;
-
-  angle += 70.0 * dt;  /* 70 degrees per second */
-  angle = fmod(angle, 360.0); /* prevents eventual overflow */
+    angle = in_angle * 180.0 / M_PI;
 }
 
 static void
 gl_compat_draw()
 {
-    update_angle();
-
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glPushMatrix();
@@ -272,6 +262,7 @@ struct gears_drawer gl21_compat_drawer = {
     .set_window_attributes = set_gl_compat_attributes,
     .set_global_state = set_gl_compat_state,
     .resize = win_resize,
+    .update_angle = update_angle,
     .draw = gl_compat_draw,
     .destruct = gl_compat_destruct,
 };

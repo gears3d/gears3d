@@ -295,21 +295,8 @@ set_global_state()
 }
 
 static void
-update_angle(void)
+update_angle(float angle)
 {
-    static double t0 = -1.;
-    static GLfloat angle = 0.0;
-    static const float angle_per_dt =
-        70.0 / 180.0 * M_PI; /* 70 degrees per second */
-    double dt, t = SDL_GetTicks() / 1000.0;
-    if (t0 < 0.0)
-        t0 = t;
-    dt = t - t0;
-    t0 = t;
-
-    angle += angle_per_dt * dt;
-    angle = fmod(angle, 2 * M_PI); /* prevents eventual overflow */
-
     int i;
     for (i = 0; i < GEARS; i++) {
         gears[i].angle = angle * gears[i].angle_rate + gears[i].angle_adjust;
@@ -320,8 +307,6 @@ static void
 draw()
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    update_angle();
 
     int i;
 
@@ -348,6 +333,7 @@ struct gears_drawer gles20_drawer = {
     .upgrade_drawer = upgrade_drawer,
     .set_global_state = set_global_state,
     .resize = win_resize,
+    .update_angle = update_angle,
     .draw = draw,
     .destruct = destruct,
 };

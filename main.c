@@ -100,6 +100,26 @@ bool sdl_start()
     return true;
 }
 
+static void
+draw(void)
+{
+    static double t0 = -1.;
+    static GLfloat angle = 0.0;
+    static const float angle_per_dt =
+        70.0 / 180.0 * M_PI; /* 70 degrees per second */
+    double dt, t = SDL_GetTicks() / 1000.0;
+    if (t0 < 0.0)
+        t0 = t;
+    dt = t - t0;
+    t0 = t;
+
+    angle += angle_per_dt * dt;
+    angle = fmod(angle, 2 * M_PI); /* prevents eventual overflow */
+
+    drawer->update_angle(angle);
+    drawer->draw();
+}
+
 void
 gl_swapbuffers()
 {
@@ -139,7 +159,7 @@ int main(int argc, char **argv)
     Uint32 t1 = start_time, t2;
     while (!done) {
         handle_event(true);
-        drawer->draw();
+        draw();
         total_frames++;
         t2 = SDL_GetTicks();
 
