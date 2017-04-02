@@ -22,6 +22,7 @@ enum long_option_values {
     OPT_GL_ES,
     OPT_VSYNC,
     OPT_MAX_TIME,
+    OPT_SPEED,
 };
 
 static bool
@@ -62,6 +63,7 @@ print_help(void)
            LN("  --gl-core             run with OpenGL core profile")
            LN("  --gles                run with OpenGLES")
            LN("  --max-time=ms         run for specified number of milliseconds")
+           LN("  --speed=dps           gear speed in degrees per second (default is 70)")
            LN("  --vsync               run syncronized with monitor refresh")
            LN("  -h, --help            display help message and exit"));
 }
@@ -75,6 +77,7 @@ parse_options(int argc, char **argv)
         { "gl-core",            OPT_GL_CORE,            OPTPARSE_NONE },
         { "gles",               OPT_GL_ES,              OPTPARSE_NONE },
         { "max-time",           OPT_MAX_TIME,           OPTPARSE_REQUIRED },
+        { "speed",              OPT_SPEED,              OPTPARSE_REQUIRED },
         { "vsync",              OPT_VSYNC,              OPTPARSE_NONE },
         { 0 },
     };
@@ -84,6 +87,7 @@ parse_options(int argc, char **argv)
     (void) optparse_arg; /* Silence compiler warning for unused function */
 
     memset(&gears_options, 0, sizeof(gears_options));
+    gears_options.speed = 70; /* degrees per second */
 
     optparse_init(&options, argv);
     while ((option = optparse_long(&options, longopts, NULL)) != -1) {
@@ -104,6 +108,9 @@ parse_options(int argc, char **argv)
             break;
         case OPT_MAX_TIME:
             ok = str_to_uint64(options.optarg, &gears_options.max_time_ms);
+            break;
+        case OPT_SPEED:
+            ok = str_to_uint64(options.optarg, &gears_options.speed);
             break;
         case OPT_VSYNC:
             gears_options.vsync = true;

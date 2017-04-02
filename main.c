@@ -100,13 +100,13 @@ bool sdl_start()
     return true;
 }
 
+static float angle_per_dt = 0.0;
+
 static void
 draw(void)
 {
     static double t0 = -1.;
     static GLfloat angle = 0.0;
-    static const float angle_per_dt =
-        70.0 / 180.0 * M_PI; /* 70 degrees per second */
     double dt, t = SDL_GetTicks() / 1000.0;
     if (t0 < 0.0)
         t0 = t;
@@ -133,6 +133,8 @@ int main(int argc, char **argv)
     ok = parse_options(argc, argv);
     if (!ok)
         return EXIT_FAILURE;
+
+    angle_per_dt = (double)gears_options.speed / 180.0 * M_PI;
 
     if (gears_options.core) {
         drawer = &gl32_core_drawer;
