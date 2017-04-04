@@ -1,0 +1,15 @@
+If you want to contribute code, it must be made public domain. (See
+UNLICENSE file in source code.)
+
+In the commit message for every contributed patch:
+
+1. Use git's Signed-of-by feature (git commit -s) with your real name
+   and email address. Signed-off-by should match the git author.
+
+2. Include this message:
+
+I dedicate any and all copyright interest in this software to the
+public domain. I make this dedication for the benefit of the public at
+large and to the detriment of my heirs and successors. I intend this
+dedication to be an overt act of relinquishment in perpetuity of all
+present and future rights to this software under copyright law.
