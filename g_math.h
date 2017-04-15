@@ -32,8 +32,8 @@ void mult_m4m4(float *dest, float *src1, float *src2);
 void copy_m4m3(mat3 *dst, mat4 *src);
 void copy_m4m4x3(mat4x3 *dst, mat4 *src);
 
-void frustrum(float *mat4, double left, double right, double bottom,
-              double top, double nearVal, double farVal);
+void frustum(float *mat4, double left, double right, double bottom,
+             double top, double nearVal, double farVal);
 void perspective(float *mat4, double fovy, double aspect, double zNear,
                  double zFar);
 

@@ -52,8 +52,8 @@ copy_m4m4x3(mat4x3 *dst, mat4 *src)
 }
 
 void
-frustrum(float *mat4, double left, double right, double bottom, double top,
-         double nearVal, double farVal)
+frustum(float *mat4, double left, double right, double bottom, double top,
+        double nearVal, double farVal)
 {
     /* https://www.khronos.org/registry/OpenGL-Refpages/gl2.1/xhtml/glFrustum.xml
      *

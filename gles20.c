@@ -174,7 +174,7 @@ reshape(int width, int height)
     translate(m4, 0.0, 0.0, -40.0);
     glUniformMatrix4fv(uniforms.view.loc, 1, GL_FALSE, m4);
 
-    frustrum(m4, -1.0, 1.0, -h, h, 5.0, 200.0);
+    frustum(m4, -1.0, 1.0, -h, h, 5.0, 200.0);
     glUniformMatrix4fv(uniforms.projection.loc, 1, GL_FALSE, m4);
 }
 
