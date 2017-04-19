@@ -136,14 +136,17 @@ int main(int argc, char **argv)
 
     angle_per_dt = (double)gears_options.speed / 180.0 * M_PI;
 
-    if (gears_options.core) {
-        drawer = &gl32_core_drawer;
-    } else if (gears_options.compat) {
+    switch (gears_options.api_type) {
+    case API_OPENGL_COMPAT:
         drawer = &gl21_compat_drawer;
-    } else if (gears_options.es) {
-        drawer = &gles20_drawer;
-    } else {
+        break;
+    case API_NOT_SET:
+    case API_OPENGL_CORE:
         drawer = &gl32_core_drawer;
+        break;
+    case API_OPENGL_ES2:
+        drawer = &gles20_drawer;
+        break;
     }
 
     sdl_start();

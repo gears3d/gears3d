@@ -68,6 +68,20 @@ print_help(void)
            LN("  -h, --help            display help message and exit"));
 }
 
+static bool
+set_api_type(enum api_type api_type)
+{
+    if (gears_options.api_type == api_type) {
+        return true;
+    } else if (gears_options.api_type == API_NOT_SET) {
+        gears_options.api_type = api_type;
+        return true;
+    } else {
+        printf("Multiple 3D API types were requested!\n\n");
+        return false;
+    }
+}
+
 bool
 parse_options(int argc, char **argv)
 {
@@ -98,13 +112,13 @@ parse_options(int argc, char **argv)
             exit(EXIT_SUCCESS);
             return false;
         case OPT_GL_COMPAT:
-            gears_options.compat = true;
+            ok = set_api_type(API_OPENGL_COMPAT);
             break;
         case OPT_GL_CORE:
-            gears_options.core = true;
+            ok = set_api_type(API_OPENGL_CORE);
             break;
         case OPT_GL_ES:
-            gears_options.es = true;
+            ok = set_api_type(API_OPENGL_ES2);
             break;
         case OPT_MAX_TIME:
             ok = str_to_uint64(options.optarg, &gears_options.max_time_ms);

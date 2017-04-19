@@ -329,6 +329,7 @@ destruct()
 
 struct gears_drawer gles20_drawer = {
     .name = "OpenGLES 2.0 Gears",
+    .api_type = API_OPENGL_ES2,
     .set_window_attributes = set_window_attributes,
     .upgrade_drawer = upgrade_drawer,
     .set_global_state = set_global_state,
