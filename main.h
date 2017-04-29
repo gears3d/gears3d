@@ -38,6 +38,7 @@ extern struct gears_drawer vk10_drawer;
 struct gears_options {
     enum api_type api_type;
     bool vsync;
+    uint64_t max_frames;
     uint64_t max_time_ms;
     uint64_t speed;
 };

@@ -21,6 +21,7 @@ enum long_option_values {
     OPT_GL_COMPAT,
     OPT_GL_ES,
     OPT_VSYNC,
+    OPT_MAX_FRAMES,
     OPT_MAX_TIME,
     OPT_SPEED,
 };
@@ -62,7 +63,8 @@ print_help(void)
            LN("  --gl-compat           run with OpenGL compatibility profile")
            LN("  --gl-core             run with OpenGL core profile")
            LN("  --gles                run with OpenGLES")
-           LN("  --max-time=ms         run for specified number of milliseconds")
+           LN("  --max-frames=n        quit after `n` frames are drawn")
+           LN("  --max-time=ms         quit after `ms` milliseconds")
            LN("  --speed=dps           gear speed in degrees per second (default is 70)")
            LN("  --vsync               run syncronized with monitor refresh")
            LN("  -h, --help            display help message and exit"));
@@ -90,6 +92,7 @@ parse_options(int argc, char **argv)
         { "gl-compat",          OPT_GL_COMPAT,          OPTPARSE_NONE },
         { "gl-core",            OPT_GL_CORE,            OPTPARSE_NONE },
         { "gles",               OPT_GL_ES,              OPTPARSE_NONE },
+        { "max-frames",         OPT_MAX_FRAMES,         OPTPARSE_REQUIRED },
         { "max-time",           OPT_MAX_TIME,           OPTPARSE_REQUIRED },
         { "speed",              OPT_SPEED,              OPTPARSE_REQUIRED },
         { "vsync",              OPT_VSYNC,              OPTPARSE_NONE },
@@ -119,6 +122,9 @@ parse_options(int argc, char **argv)
             break;
         case OPT_GL_ES:
             ok = set_api_type(API_OPENGL_ES2);
+            break;
+        case OPT_MAX_FRAMES:
+            ok = str_to_uint64(options.optarg, &gears_options.max_frames);
             break;
         case OPT_MAX_TIME:
             ok = str_to_uint64(options.optarg, &gears_options.max_time_ms);

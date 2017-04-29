@@ -191,8 +191,10 @@ int main(int argc, char **argv)
         total_frames++;
         t2 = SDL_GetTicks();
 
-        if (gears_options.max_time_ms != 0 &&
-            (t2 - start_time) >= gears_options.max_time_ms) {
+        if ((gears_options.max_frames != 0 &&
+             total_frames >= gears_options.max_frames) ||
+            (gears_options.max_time_ms != 0 &&
+             (t2 - start_time) >= gears_options.max_time_ms)) {
             done = true;
         }
 
