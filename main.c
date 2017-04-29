@@ -3,7 +3,7 @@
 #include "main.h"
 
 #include <epoxy/gl.h>
-#include <SDL.h>
+#include "sdl_fw.h"
 #include <SDL_opengl.h>
 
 static struct gears_drawer *drawer = NULL;
@@ -80,6 +80,7 @@ bool sdl_start()
     window = SDL_CreateWindow("gears3d", SDL_WINDOWPOS_UNDEFINED,
                               SDL_WINDOWPOS_UNDEFINED, 300, 300,
                               window_create_flags);
+    set_sdl_window(window);
 
     if (is_gl) {
         context = SDL_GL_CreateContext(window);
