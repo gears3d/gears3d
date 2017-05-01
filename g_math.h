@@ -3,6 +3,8 @@
 #ifndef __math_h_included__
 #define __math_h_included__
 
+#define ALIGN(x, a) (((x) % (a) == 0) ? (x) : ((x) + ((a) - ((x) % (a)))))
+
 #include <stdbool.h>
 
 #pragma pack(1)
