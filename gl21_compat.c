@@ -3,8 +3,7 @@
 #include "main.h"
 
 #include <epoxy/gl.h>
-#include <SDL.h>
-#include <SDL_opengl.h>
+#include "sdl_fw.h"
 
 static void
 gear(GLfloat inner_radius, GLfloat outer_radius, GLfloat width,

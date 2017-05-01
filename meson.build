@@ -2,7 +2,7 @@
 
 project('gears3d', 'c')
 
-deps_str = 'epoxy SDL2'
+deps_str = 'epoxy'
 deps = []
 foreach d : deps_str.split()
     deps += [ dependency(d) ]

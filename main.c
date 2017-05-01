@@ -4,7 +4,7 @@
 
 #include <epoxy/gl.h>
 #include "sdl_fw.h"
-#include <SDL_opengl.h>
+#include <SDL2/SDL_opengl.h>
 
 static struct gears_drawer *drawer = NULL;
 static SDL_Window* window;
@@ -170,6 +170,7 @@ int main(int argc, char **argv)
         break;
     }
 
+    load_sdl_library();
     sdl_start();
 
     if (drawer->upgrade_drawer)

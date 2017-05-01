@@ -4,9 +4,7 @@
 #include "gl.h"
 #include "g_math.h"
 #include "vert_buf.h"
-
-#include <SDL.h>
-#include <SDL_opengl.h>
+#include "sdl_fw.h"
 
 static GLuint program = 0;
 static GLuint vert_bo = 0;
