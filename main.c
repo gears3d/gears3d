@@ -56,6 +56,9 @@ int main(int argc, char **argv)
     case API_OPENGL_ES2:
         drawer = &gles20_drawer;
         break;
+    case API_VULKAN:
+        drawer = &vk10_drawer;
+        break;
     }
 
     winsys = &winsys_x11r6;

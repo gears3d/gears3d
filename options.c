@@ -17,6 +17,7 @@ enum long_option_values {
     OPT_GL_CORE = 0x10000,
     OPT_GL_COMPAT,
     OPT_GL_ES,
+    OPT_VK,
     OPT_VSYNC,
     OPT_MAX_FRAMES,
     OPT_MAX_TIME,
@@ -63,6 +64,7 @@ print_help(void)
            LN("  --max-frames=n        quit after `n` frames are drawn")
            LN("  --max-time=ms         quit after `ms` milliseconds")
            LN("  --speed=dps           gear speed in degrees per second (default is 70)")
+           LN("  --vk                  run with Vulkan")
            LN("  --vsync               run syncronized with monitor refresh")
            LN("  -h, --help            display help message and exit"));
 }
@@ -92,6 +94,7 @@ parse_options(int argc, char **argv)
         { "max-frames",         OPT_MAX_FRAMES,         OPTPARSE_REQUIRED },
         { "max-time",           OPT_MAX_TIME,           OPTPARSE_REQUIRED },
         { "speed",              OPT_SPEED,              OPTPARSE_REQUIRED },
+        { "vk",                 OPT_VK   ,              OPTPARSE_NONE },
         { "vsync",              OPT_VSYNC,              OPTPARSE_NONE },
         { 0 },
     };
@@ -128,6 +131,9 @@ parse_options(int argc, char **argv)
             break;
         case OPT_SPEED:
             ok = str_to_uint64(options.optarg, &gears_options.speed);
+            break;
+        case OPT_VK:
+            ok = set_api_type(API_VULKAN);
             break;
         case OPT_VSYNC:
             gears_options.vsync = true;

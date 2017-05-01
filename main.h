@@ -12,6 +12,7 @@ enum api_type {
     API_OPENGL_COMPAT,
     API_OPENGL_CORE,
     API_OPENGL_ES2,
+    API_VULKAN,
 };
 
 struct gears_drawer {
