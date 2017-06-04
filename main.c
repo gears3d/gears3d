@@ -189,7 +189,7 @@ int main(int argc, char **argv)
     while (!done) {
         handle_event(true);
         draw();
-        total_frames++;
+        total_frames = frame_drawn();
         t2 = get_sim_time_ms();
 
         if ((gears_options.max_frames != 0 &&

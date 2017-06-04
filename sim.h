@@ -7,5 +7,7 @@
 
 void init_sim(void);
 uint64_t get_sim_time_ms(void);
+uint64_t frame_drawn(void);
+uint64_t get_frame_count(void);
 
 #endif
