@@ -2,13 +2,18 @@
 
 project('gears3d', 'c')
 
+c_compiler = meson.get_compiler('c')
+
+build_dep_libs_str = 'X11 xcb'
+foreach d : build_dep_libs_str.split()
+    c_compiler.find_library(d)
+endforeach
+
 deps_str = 'epoxy'
 deps = []
 foreach d : deps_str.split()
     deps += [ dependency(d) ]
 endforeach
-
-c_compiler = meson.get_compiler('c')
 
 dep_libs_str = 'dl m'
 foreach d : dep_libs_str.split()
@@ -18,7 +23,7 @@ endforeach
 srcs = 'main.c dlfcn_lib.c g_math.c'
 srcs += ' gl21_compat.c gl32_core.c gles20.c gles30.c'
 srcs += ' gl_shader.c glx.c options.c sdl_fw.c sim.c vert_buf.c'
-srcs += ' winsys_sdl.c'
+srcs += ' winsys_sdl.c winsys_x11r6.c'
 srcs = srcs.split()
 
 executable('gears3d', srcs, dependencies: deps)
