@@ -25,7 +25,6 @@ extern Window gears3d_x_win;
 #define SDL_GL_SetSwapInterval SDL2FN(SDL_GL_SetSwapInterval)
 #define SDL_GL_SwapWindow SDL2FN(SDL_GL_SwapWindow)
 #define SDL_GetError SDL2FN(SDL_GetError)
-#define SDL_GetTicks SDL2FN(SDL_GetTicks)
 #define SDL_GetWindowSize SDL2FN(SDL_GetWindowSize)
 #define SDL_GetWindowWMInfo SDL2FN(SDL_GetWindowWMInfo)
 #define SDL_Init SDL2FN(SDL_Init)
@@ -45,7 +44,6 @@ DEF_PSDL2FN(SDL_GL_SetAttribute, int, (SDL_GLattr, int));
 DEF_PSDL2FN(SDL_GL_SetSwapInterval, int, (int));
 DEF_PSDL2FN(SDL_GL_SwapWindow, void, (SDL_Window*));
 DEF_PSDL2FN(SDL_GetError, const char *, (void));
-DEF_PSDL2FN(SDL_GetTicks, Uint32, (void));
 DEF_PSDL2FN(SDL_GetWindowSize, void, (SDL_Window*, int*, int*));
 DEF_PSDL2FN(SDL_GetWindowWMInfo, SDL_bool, (SDL_Window*, SDL_SysWMinfo*));
 DEF_PSDL2FN(SDL_Init, int, (Uint32 flags));

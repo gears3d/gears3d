@@ -16,7 +16,6 @@ DECL_PSDL2FN(SDL_GL_SetAttribute);
 DECL_PSDL2FN(SDL_GL_SetSwapInterval);
 DECL_PSDL2FN(SDL_GL_SwapWindow);
 DECL_PSDL2FN(SDL_GetError);
-DECL_PSDL2FN(SDL_GetTicks);
 DECL_PSDL2FN(SDL_GetWindowSize);
 DECL_PSDL2FN(SDL_GetWindowWMInfo);
 DECL_PSDL2FN(SDL_Init);
@@ -42,7 +41,6 @@ load_sdl_library(void)
     DLSYM(SDL_GL_SetSwapInterval);
     DLSYM(SDL_GL_SwapWindow);
     DLSYM(SDL_GetError);
-    DLSYM(SDL_GetTicks);
     DLSYM(SDL_GetWindowSize);
     DLSYM(SDL_GetWindowWMInfo);
     DLSYM(SDL_Init);

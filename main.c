@@ -4,6 +4,7 @@
 
 #include <epoxy/gl.h>
 #include "sdl_fw.h"
+#include "sim.h"
 #include <SDL2/SDL_opengl.h>
 
 static struct gears_drawer *drawer = NULL;
@@ -128,7 +129,7 @@ draw(void)
 {
     static double t0 = -1.;
     static GLfloat angle = 0.0;
-    double dt, t = SDL_GetTicks() / 1000.0;
+    double dt, t = get_sim_time_ms() / 1000.0;
     if (t0 < 0.0)
         t0 = t;
     dt = t - t0;
@@ -172,6 +173,7 @@ int main(int argc, char **argv)
 
     load_sdl_library();
     sdl_start();
+    init_sim();
 
     if (drawer->upgrade_drawer)
         drawer = drawer->upgrade_drawer();
@@ -182,13 +184,13 @@ int main(int argc, char **argv)
     uint64_t total_frames = 0, start_frame = 0;
     drawer->set_global_state();
     drawer->resize(width, height);
-    const Uint32 start_time = SDL_GetTicks();
-    Uint32 t1 = start_time, t2;
+    const uint64_t start_time = get_sim_time_ms();
+    uint64_t t1 = start_time, t2;
     while (!done) {
         handle_event(true);
         draw();
         total_frames++;
-        t2 = SDL_GetTicks();
+        t2 = get_sim_time_ms();
 
         if ((gears_options.max_frames != 0 &&
              total_frames >= gears_options.max_frames) ||
