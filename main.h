@@ -32,6 +32,20 @@ extern struct gears_drawer gles20_drawer;
 extern struct gears_drawer gles30_drawer;
 extern struct gears_drawer vk10_drawer;
 
+extern struct gears_drawer *drawer;
+
+struct winsys {
+    const char *name;
+    bool (*init)(void);
+    bool (*create_window)();
+    void (*swap_buffers)();
+    void (*handle_events)();
+};
+
+extern struct winsys winsys_sdl;
+
+extern struct winsys *winsys;
+
 struct gears_options {
     enum api_type api_type;
     bool vsync;

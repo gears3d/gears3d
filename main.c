@@ -1,126 +1,13 @@
 /* Jordan Justen : gears3d is public domain */
 
 #include "main.h"
-
-#include <epoxy/gl.h>
-#include "sdl_fw.h"
 #include "sim.h"
-#include <SDL2/SDL_opengl.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <math.h>
 
-static struct gears_drawer *drawer = NULL;
-static SDL_Window* window;
-static SDL_GLContext context;
-static int width, height;
-static bool done = false;
-
-static bool
-handle_event(bool all)
-{
-    SDL_Event event;
-
-    while (SDL_PollEvent(&event)) {
-        switch (event.type) {
-        case SDL_KEYUP:
-            switch (event.key.keysym.sym) {
-            case SDLK_ESCAPE:
-                done = true;
-                break;
-            }
-            break;
-        case SDL_QUIT:
-            done = true;
-            break;
-        case SDL_WINDOWEVENT:
-            switch (event.window.event) {
-            case SDL_WINDOWEVENT_RESIZED:
-                width = event.window.data1;
-                height = event.window.data2;
-                drawer->resize(width, height);
-                break;
-            }
-        }
-
-        if (!all) {
-            break;
-        }
-    }
-
-    return true;
-}
-
-static
-bool sdl_start()
-{
-    const GLubyte *version;
-
-    if (SDL_Init(SDL_INIT_VIDEO) < 0) {
-        fprintf(stderr, "Unable to init SDL: %s\n", SDL_GetError());
-        return false;
-    }
-
-    drawer->set_window_attributes();
-
-    bool is_gl = false;
-    switch (drawer->api_type) {
-    case API_NOT_SET:
-        assert(drawer->api_type != API_NOT_SET);
-        break;
-    case API_OPENGL_COMPAT:
-    case API_OPENGL_CORE:
-    case API_OPENGL_ES2:
-        is_gl = true;
-        break;
-    }
-
-    Uint32 window_create_flags = SDL_WINDOW_RESIZABLE;
-    /* window_create_flags |= SDL_WINDOW_FULLSCREEN_DESKTOP; */
-
-    if (is_gl)
-        window_create_flags |= SDL_WINDOW_OPENGL;
-
-    window = SDL_CreateWindow("gears3d", SDL_WINDOWPOS_UNDEFINED,
-                              SDL_WINDOWPOS_UNDEFINED, 300, 300,
-                              window_create_flags);
-    set_sdl_window(window);
-
-    if (is_gl) {
-        context = SDL_GL_CreateContext(window);
-        if (!context) {
-            fprintf(stderr, "SDL_GL_CreateContext(): %s\n", SDL_GetError());
-            return false;
-        }
-
-        int w, h;
-        SDL_GL_MakeCurrent(window, context);
-        SDL_GL_GetDrawableSize(window, &w, &h);
-        glViewport(0, 0, w, h);
-        width = w;
-        height = h;
-
-        version = glGetString(GL_VERSION);
-        assert(version);
-        printf("GL Version: %s\n", version);
-
-        if (gears_options.vsync) {
-            SDL_GL_SetSwapInterval(1);
-        } else if (SDL_GL_SetSwapInterval(-1 /* late swap tearing */) == -1) {
-            /* late swap setup failed */
-            SDL_GL_SetSwapInterval(0 /* immediate updates */);
-        }
-
-        glEnable(GL_DEPTH_TEST);
-        glDepthFunc(GL_LESS);
-        glEnable(GL_CULL_FACE);
-        glCullFace(GL_BACK);
-    } else {
-        int w, h;
-        SDL_GetWindowSize(window, &w, &h);
-        width = w;
-        height = h;
-    }
-
-    return true;
-}
+struct gears_drawer *drawer = NULL;
+struct winsys * winsys = NULL;
 
 static float angle_per_dt = 0.0;
 
@@ -128,7 +15,7 @@ static void
 draw(void)
 {
     static double t0 = -1.;
-    static GLfloat angle = 0.0;
+    static float angle = 0.0;
     double dt, t = get_sim_time_ms() / 1000.0;
     if (t0 < 0.0)
         t0 = t;
@@ -145,7 +32,7 @@ draw(void)
 void
 gl_swapbuffers()
 {
-    SDL_GL_SwapWindow(window);
+    winsys->swap_buffers();
 }
 
 int main(int argc, char **argv)
@@ -171,8 +58,18 @@ int main(int argc, char **argv)
         break;
     }
 
-    load_sdl_library();
-    sdl_start();
+    winsys = &winsys_sdl;
+
+    if (!winsys->init()) {
+        fprintf(stderr, "Failed to initialize winsys (%s)\n", winsys->name);
+        return 1;
+    }
+
+    if (!winsys->create_window()) {
+        fprintf(stderr, "Failed to create window (%s)\n", winsys->name);
+        return 1;
+    }
+
     init_sim();
 
     if (drawer->upgrade_drawer)
@@ -183,11 +80,11 @@ int main(int argc, char **argv)
 
     uint64_t total_frames = 0, start_frame = 0;
     drawer->set_global_state();
-    drawer->resize(width, height);
+    drawer->resize(sim_width, sim_height);
     const uint64_t start_time = get_sim_time_ms();
     uint64_t t1 = start_time, t2;
-    while (!done) {
-        handle_event(true);
+    while (!sim_done) {
+        winsys->handle_events();
         draw();
         total_frames = frame_drawn();
         t2 = get_sim_time_ms();
@@ -196,10 +93,10 @@ int main(int argc, char **argv)
              total_frames >= gears_options.max_frames) ||
             (gears_options.max_time_ms != 0 &&
              (t2 - start_time) >= gears_options.max_time_ms)) {
-            done = true;
+            sim_done = true;
         }
 
-        if ((t2 - t1) >= 5000 || done) {
+        if ((t2 - t1) >= 5000 || sim_done) {
             const int frames = total_frames - start_frame;
             const float time = (t2 - t1) / 1000.0;
             const float fps = frames / time;

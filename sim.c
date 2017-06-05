@@ -6,6 +6,9 @@
 static struct timespec start;
 static uint64_t frame_count;
 
+uint32_t sim_width = 300, sim_height = 300;
+bool sim_done = false;
+
 static uint64_t
 delta_ms(const struct timespec *fst, const struct timespec *snd)
 {
