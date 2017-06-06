@@ -60,17 +60,7 @@ create_window()
 
     drawer->set_window_attributes();
 
-    bool is_gl = false;
-    switch (drawer->api_type) {
-    case API_NOT_SET:
-        assert(drawer->api_type != API_NOT_SET);
-        break;
-    case API_OPENGL_COMPAT:
-    case API_OPENGL_CORE:
-    case API_OPENGL_ES2:
-        is_gl = true;
-        break;
-    }
+    bool is_gl = api_is_gl();
 
     Uint32 window_create_flags = SDL_WINDOW_RESIZABLE;
     /* window_create_flags |= SDL_WINDOW_FULLSCREEN_DESKTOP; */

@@ -34,6 +34,18 @@ extern struct gears_drawer vk10_drawer;
 
 extern struct gears_drawer *drawer;
 
+static inline bool api_is_gl(void)
+{
+    switch (drawer->api_type) {
+    case API_OPENGL_COMPAT:
+    case API_OPENGL_CORE:
+    case API_OPENGL_ES2:
+        return true;
+    default:
+        return false;
+    }
+}
+
 struct winsys {
     const char *name;
     bool (*init)(void);
