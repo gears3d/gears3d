@@ -97,11 +97,6 @@ create_window()
             /* late swap setup failed */
             SDL_GL_SetSwapInterval(0 /* immediate updates */);
         }
-
-        glEnable(GL_DEPTH_TEST);
-        glDepthFunc(GL_LESS);
-        glEnable(GL_CULL_FACE);
-        glCullFace(GL_BACK);
     } else {
         int w, h;
         SDL_GetWindowSize(window, &w, &h);

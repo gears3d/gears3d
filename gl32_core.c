@@ -148,6 +148,11 @@ set_gl_core_state()
     int i;
     bool ok;
 
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LESS);
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_BACK);
+
     glClearColor(0.0, 0.0, 0.0, 1.0);
 
 #define L(s) s "\n"
