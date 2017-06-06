@@ -1,7 +1,4 @@
-/* Gears. Draw them. In 3D.
- *
- * Jordan Justen : gears3d is public domain
- */
+/* Jordan Justen : gears3d is public domain */
 
 #include "g_math.h"
 #include <math.h>

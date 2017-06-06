@@ -1,7 +1,4 @@
-/* Gears. Draw them. In 3D.
- *
- * Jordan Justen : gears3d is public domain
- */
+/* Jordan Justen : gears3d is public domain */
 
 #ifndef __gl_h_included__
 #define __gl_h_included__

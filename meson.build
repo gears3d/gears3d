@@ -1,5 +1,3 @@
-# Gears. Draw them. In 3D.
-#
 # Jordan Justen : gears3d is public domain
 
 project('gears3d', 'c')
