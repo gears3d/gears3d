@@ -22,8 +22,8 @@ endforeach
 
 srcs = 'main.c dlfcn_lib.c g_math.c'
 srcs += ' gl21_compat.c gl32_core.c gles20.c gles30.c'
-srcs += ' gl_shader.c glx.c options.c sdl_fw.c sim.c vert_buf.c'
-srcs += ' winsys_sdl.c winsys_x11r6.c'
+srcs += ' gl_shader.c glx.c options.c sim.c vert_buf.c'
+srcs += ' winsys_x11r6.c'
 srcs = srcs.split()
 
 executable('gears3d', srcs, dependencies: deps)

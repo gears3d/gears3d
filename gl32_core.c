@@ -4,7 +4,9 @@
 #include "gl.h"
 #include "g_math.h"
 #include "vert_buf.h"
-#include "sdl_fw.h"
+#include <math.h>
+#include <stdlib.h>
+#include <string.h>
 
 static GLuint program = 0;
 static GLuint vao = 0;
@@ -54,10 +56,6 @@ lookup_uniform_locations(void)
 static void
 set_gl_core_attributes()
 {
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK,
-                        SDL_GL_CONTEXT_PROFILE_CORE);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
 }
 
 #define GEARS 3

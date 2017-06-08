@@ -3,7 +3,7 @@
 #include "main.h"
 
 #include <epoxy/gl.h>
-#include "sdl_fw.h"
+#include <math.h>
 
 static void
 gear(GLfloat inner_radius, GLfloat outer_radius, GLfloat width,
@@ -140,10 +140,6 @@ static GLfloat viewDist = 40.0;
 static void
 set_gl_compat_attributes()
 {
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK,
-                        SDL_GL_CONTEXT_PROFILE_COMPATIBILITY);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
 }
 
 /* new window size or exposure */
