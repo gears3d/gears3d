@@ -58,7 +58,7 @@ int main(int argc, char **argv)
         break;
     }
 
-    winsys = &winsys_sdl;
+    winsys = &winsys_x11r6;
 
     if (!winsys->init()) {
         fprintf(stderr, "Failed to initialize winsys (%s)\n", winsys->name);
