@@ -2,10 +2,11 @@
 
 #include <assert.h>
 #include <math.h>
+#include <stdlib.h>
 #include "vert_buf.h"
 
 static void
-add_vert(struct gear_vert **next_vert, GLfloat x, GLfloat y, GLfloat z,
+add_vert(struct gear_vert **next_vert, float x, float y, float z,
          const struct vec3 *normal)
 {
     assert(next_vert != NULL && *next_vert != NULL);
@@ -20,8 +21,8 @@ add_vert(struct gear_vert **next_vert, GLfloat x, GLfloat y, GLfloat z,
 }
 
 static void
-add_vert_mult_xy_norm(struct gear_vert **next_vert, GLfloat x, GLfloat y,
-                      GLfloat z, float mult)
+add_vert_mult_xy_norm(struct gear_vert **next_vert, float x, float y,
+                      float z, float mult)
 {
     struct vec3 norm_tmp = { mult * x - x, mult * y - y, 0.0 };
     add_vert(next_vert, x, y, z, &norm_tmp);
@@ -30,16 +31,16 @@ add_vert_mult_xy_norm(struct gear_vert **next_vert, GLfloat x, GLfloat y,
 #define TOOTH_VERTS 40
 
 static void
-tooth(struct gear_vert *verts, GLfloat inner_radius, GLfloat outer_radius,
-      GLfloat width, GLint teeth, GLfloat tooth_depth, int tooth_num)
+tooth(struct gear_vert *verts, float inner_radius, float outer_radius,
+      float width, int teeth, float tooth_depth, int tooth_num)
 {
-    const GLfloat r0 = inner_radius;
-    const GLfloat r1 = outer_radius - tooth_depth / 2.0;
-    const GLfloat r2 = outer_radius + tooth_depth / 2.0;
+    const float r0 = inner_radius;
+    const float r1 = outer_radius - tooth_depth / 2.0;
+    const float r2 = outer_radius + tooth_depth / 2.0;
     const double da = M_PI / teeth / 2.0;
     const double pta = 2.0 * M_PI / teeth;
     const double ta = tooth_num * pta;
-    const GLfloat half_width = 0.5 * width;
+    const float half_width = 0.5 * width;
     const double dcos[] = { cos(ta), cos(ta + da), cos(ta + 2 * da),
                             cos(ta + 3 * da), cos(ta + 4 * da) };
     const double dsin[] = { sin(ta), sin(ta + da), sin(ta + 2 * da),
@@ -133,9 +134,9 @@ tooth_vertex_count(void)
 }
 
 void
-fill_tooth_vertices(struct gear_vert *buf, GLfloat inner_radius,
-                    GLfloat outer_radius, GLfloat width, GLint teeth,
-                    GLfloat tooth_depth)
+fill_tooth_vertices(struct gear_vert *buf, float inner_radius,
+                    float outer_radius, float width, int teeth,
+                    float tooth_depth)
 {
     tooth(buf, inner_radius, outer_radius, width, teeth, tooth_depth, -1);
 }
@@ -147,9 +148,9 @@ gear_vertex_count(uint32_t teeth)
 }
 
 void
-fill_gear_vertices(struct gear_vert *buf, GLfloat inner_radius,
-                   GLfloat outer_radius, GLfloat width, GLint teeth,
-                   GLfloat tooth_depth)
+fill_gear_vertices(struct gear_vert *buf, float inner_radius,
+                   float outer_radius, float width, int teeth,
+                   float tooth_depth)
 {
     int i;
     for (i = 0; i < teeth; i++) {
