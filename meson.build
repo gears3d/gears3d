@@ -9,19 +9,14 @@ foreach d : build_dep_libs_str.split()
     c_compiler.find_library(d)
 endforeach
 
-deps_str = 'epoxy'
 deps = []
-foreach d : deps_str.split()
-    deps += [ dependency(d) ]
-endforeach
-
 dep_libs_str = 'dl m'
 foreach d : dep_libs_str.split()
     deps += [ c_compiler.find_library(d) ]
 endforeach
 
 srcs = 'main.c dlfcn_lib.c g_math.c'
-srcs += ' gl21_compat.c gl32_core.c gles20.c gles30.c'
+srcs += ' glfn.c gl21_compat.c gl32_core.c gles20.c gles30.c'
 srcs += ' gl_shader.c glx.c options.c sim.c vert_buf.c'
 srcs += ' winsys_x11r6.c'
 srcs = srcs.split()

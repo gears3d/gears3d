@@ -3,8 +3,11 @@
 #ifndef __gl_h_included__
 #define __gl_h_included__
 
-#include <epoxy/gl.h>
 #include <stdbool.h>
+
+typedef void* (*gl_proc_getter)(const unsigned char *);
+
+bool gl_locate_procs(gl_proc_getter getter);
 
 GLuint gl_program_vf_str(const char *vs, const char *fs);
 GLuint gl_program_vgf_str(const char *vs, const char *gs, const char *fs);

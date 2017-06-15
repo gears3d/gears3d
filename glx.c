@@ -1,6 +1,7 @@
 /* Jordan Justen : gears3d is public domain */
 
 #include "glx.h"
+#include "gl.h"
 #include "load_lib.h"
 #include "main.h"
 
@@ -57,6 +58,8 @@ load_glx_library(void)
     GPA(glXQueryExtension);
     GPA(glXQueryExtensionsString);
     GPA(glXSwapBuffers);
+
+    gl_locate_procs(glXGetProcAddress);
 
     return true;
 }

@@ -2,7 +2,7 @@
 
 #include "main.h"
 
-#include <epoxy/gl.h>
+#include "glfn.h"
 #include <math.h>
 
 static void

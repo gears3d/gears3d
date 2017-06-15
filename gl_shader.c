@@ -1,8 +1,7 @@
 /* Jordan Justen : gears3d is public domain */
 
+#include "glfn.h"
 #include "gl.h"
-
-#include <epoxy/gl.h>
 
 #include <assert.h>
 #include <stdarg.h>

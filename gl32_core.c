@@ -1,6 +1,7 @@
 /* Jordan Justen : gears3d is public domain */
 
 #include "main.h"
+#include "glfn.h"
 #include "gl.h"
 #include "g_math.h"
 #include "vert_buf.h"
