@@ -2,10 +2,7 @@
 
 # `header` applies to this and generated files
 header = '''
-/* Gears. Draw them. In 3D.
- *
- * Jordan Justen : gears3d is public domain
- */
+/* Jordan Justen : gears3d is public domain */
 '''.lstrip()
 
 import os
