@@ -172,6 +172,7 @@ static VkQueue queue;
 static VkCommandPool cmd_pool;
 static VkSurfaceKHR surface;
 static bool immediate_present_supported = false;
+static bool mailbox_present_supported = false;
 static VkSemaphore semaphore;
 static VkFence fence;
 
@@ -592,8 +593,14 @@ set_global_state()
     for (present_mode_num = 0;
          present_mode_num < present_mode_count;
          present_mode_num++) {
-        if (present_modes[present_mode_num] == VK_PRESENT_MODE_IMMEDIATE_KHR) {
+        switch(present_modes[present_mode_num]) {
+        case VK_PRESENT_MODE_IMMEDIATE_KHR:
             immediate_present_supported = true;
+            break;
+        case VK_PRESENT_MODE_MAILBOX_KHR:
+            mailbox_present_supported = true;
+            break;
+        default:
             break;
         }
     }
@@ -951,8 +958,12 @@ create_pipeline(int width, int height)
     }
 
     VkPresentModeKHR present_mode = VK_PRESENT_MODE_FIFO_KHR;
-    if (!gears_options.vsync && immediate_present_supported)
-        present_mode = VK_PRESENT_MODE_IMMEDIATE_KHR;
+    if (!gears_options.vsync) {
+        if (immediate_present_supported)
+            present_mode = VK_PRESENT_MODE_IMMEDIATE_KHR;
+        else if (mailbox_present_supported)
+            present_mode = VK_PRESENT_MODE_MAILBOX_KHR;
+    }
 
     uint32_t family_indices[] = { 0 };
     VkSwapchainCreateInfoKHR swapchain_create_info = {
