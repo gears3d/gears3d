@@ -122,7 +122,6 @@ create_glx_context_attrib(Display *dpy, GLXDrawable draw)
         GLX_ALPHA_SIZE, 8,
         GLX_DEPTH_SIZE, 16,
         GLX_STENCIL_SIZE, 0,
-        GLX_FRAMEBUFFER_SRGB_CAPABLE_ARB, True,
         None,
     };
     int num_cfg;
