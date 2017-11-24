@@ -22,6 +22,7 @@ enum long_option_values {
     OPT_MAX_FRAMES,
     OPT_MAX_TIME,
     OPT_SPEED,
+    OPT_WINSYS,
 };
 
 static bool
@@ -66,6 +67,7 @@ print_help(void)
            LN("  --speed=dps           gear speed in degrees per second (default is 70)")
            LN("  --vk                  run with Vulkan")
            LN("  --vsync               run syncronized with monitor refresh")
+           LN("  --winsys=w            where `w` is x11")
            LN("  -h, --help            display help message and exit"));
 }
 
@@ -83,6 +85,29 @@ set_api_type(enum api_type api_type)
     }
 }
 
+static bool
+set_winsys(const char *winsys_str)
+{
+    enum winsys_type winsys_type;
+
+    if (strcmp(winsys_str, "x11") == 0) {
+        winsys_type = WINSYS_X11;
+    } else {
+        printf("Unknown winsys type: %s\n\n", winsys_str);
+        return false;
+    }
+
+    if (gears_options.winsys_type == winsys_type) {
+        return true;
+    } else if (gears_options.winsys_type == WINSYS_AUTO) {
+        gears_options.winsys_type = winsys_type;
+        return true;
+    } else {
+        printf("Multiple winsys types were requested!\n\n");
+        return false;
+    }
+}
+
 bool
 parse_options(int argc, char **argv)
 {
@@ -96,6 +121,7 @@ parse_options(int argc, char **argv)
         { "speed",              OPT_SPEED,              OPTPARSE_REQUIRED },
         { "vk",                 OPT_VK   ,              OPTPARSE_NONE },
         { "vsync",              OPT_VSYNC,              OPTPARSE_NONE },
+        { "winsys",             OPT_WINSYS,             OPTPARSE_REQUIRED },
         { 0 },
     };
     struct optparse options;
@@ -137,6 +163,9 @@ parse_options(int argc, char **argv)
             break;
         case OPT_VSYNC:
             gears_options.vsync = true;
+            break;
+        case OPT_WINSYS:
+            ok = set_winsys(options.optarg);
             break;
         case '?':
             printf("Unknown option!\n\n");

@@ -15,6 +15,11 @@ enum api_type {
     API_VULKAN,
 };
 
+enum winsys_type {
+    WINSYS_AUTO,
+    WINSYS_X11,
+};
+
 struct gears_drawer {
     const char *name;
     enum api_type api_type;
@@ -62,6 +67,7 @@ extern struct winsys *winsys;
 
 struct gears_options {
     enum api_type api_type;
+    enum winsys_type winsys_type;
     bool vsync;
     uint64_t max_frames;
     uint64_t max_time_ms;
