@@ -73,6 +73,9 @@ int main(int argc, char **argv)
         return 1;
     }
 
+    if (winsys->name)
+        printf("Window system: %s\n", winsys->name);
+
     init_sim();
 
     if (drawer->upgrade_drawer)
