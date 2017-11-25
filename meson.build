@@ -17,7 +17,8 @@ endforeach
 
 srcs = 'main.c dlfcn_lib.c g_math.c'
 srcs += ' glfn.c gl21_compat.c gl32_core.c gles20.c gles30.c'
-srcs += ' gl_shader.c glx.c options.c sim.c vert_buf.c vk10.c'
+srcs += ' options.c sim.c vert_buf.c vk10.c'
+srcs += ' gl_shader.c egl.c glx.c'
 srcs += ' winsys_x11r6.c'
 srcs = srcs.split()
 
