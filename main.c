@@ -61,7 +61,15 @@ int main(int argc, char **argv)
         break;
     }
 
-    winsys = &winsys_x11r6;
+    switch (gears_options.winsys_type) {
+    case WINSYS_WAYLAND:
+        winsys = &winsys_wl;
+        break;
+    case WINSYS_AUTO:
+    case WINSYS_X11:
+        winsys = &winsys_x11r6;
+        break;
+    }
 
     if (!winsys->init()) {
         fprintf(stderr, "Failed to initialize winsys (%s)\n", winsys->name);

@@ -67,7 +67,7 @@ print_help(void)
            LN("  --speed=dps           gear speed in degrees per second (default is 70)")
            LN("  --vk                  run with Vulkan")
            LN("  --vsync               run syncronized with monitor refresh")
-           LN("  --winsys=w            where `w` is x11")
+           LN("  --winsys=w            where `w` is wayland or x11")
            LN("  -h, --help            display help message and exit"));
 }
 
@@ -90,7 +90,9 @@ set_winsys(const char *winsys_str)
 {
     enum winsys_type winsys_type;
 
-    if (strcmp(winsys_str, "x11") == 0) {
+    if (strcmp(winsys_str, "wayland") == 0) {
+        winsys_type = WINSYS_WAYLAND;
+    } else if (strcmp(winsys_str, "x11") == 0) {
         winsys_type = WINSYS_X11;
     } else {
         printf("Unknown winsys type: %s\n\n", winsys_str);

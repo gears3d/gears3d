@@ -17,6 +17,7 @@ enum api_type {
 
 enum winsys_type {
     WINSYS_AUTO,
+    WINSYS_WAYLAND,
     WINSYS_X11,
 };
 
@@ -60,6 +61,7 @@ struct winsys {
     void (*handle_events)();
 };
 
+extern struct winsys winsys_wl;
 extern struct winsys winsys_x11r6;
 
 extern struct winsys *winsys;
