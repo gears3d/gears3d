@@ -6,10 +6,12 @@
 
 #include "main.h"
 #include "winsys_x11r6.h"
+#include "winsys_wl.h"
 #include "g_math.h"
 #include "vert_buf.h"
 
 #include <pthread.h>
+#define VK_USE_PLATFORM_WAYLAND_KHR
 #define VK_USE_PLATFORM_XLIB_KHR
 #include <vulkan/vulkan.h>
 
@@ -39,6 +41,7 @@ DECL_PVKFN(vkGetInstanceProcAddr);
 
 /* vkGetInstanceProcAddr function pointers */
 DECL_PVKFN(vkCreateDevice);
+DECL_PVKFN(vkCreateWaylandSurfaceKHR);
 DECL_PVKFN(vkCreateXlibSurfaceKHR);
 DECL_PVKFN(vkEnumeratePhysicalDevices);
 DECL_PVKFN(vkGetPhysicalDeviceProperties);
@@ -134,6 +137,7 @@ static const VkAllocationCallbacks alloc_callbacks = {
 };
 
 const char *enable_extensions[] = {
+    "VK_KHR_wayland_surface",
     "VK_KHR_xlib_surface",
     "VK_KHR_surface",
 };
@@ -144,7 +148,7 @@ static const VkInstanceCreateInfo create_info = {
         .apiVersion = VK_MAKE_VERSION(1, 0, 0),
     },
     .ppEnabledExtensionNames = enable_extensions,
-    .enabledExtensionCount = 2,
+    .enabledExtensionCount = 3,
 };
 
 static const float queue_priority = 1.0f;
@@ -212,6 +216,7 @@ static void init_vk_instance()
     assert(VFN(f) != NULL)
 
     GET_I_PROC(vkCreateDevice);
+    GET_I_PROC(vkCreateWaylandSurfaceKHR);
     GET_I_PROC(vkCreateXlibSurfaceKHR);
     GET_I_PROC(vkEnumeratePhysicalDevices);
     GET_I_PROC(vkGetPhysicalDeviceProperties);
@@ -499,7 +504,10 @@ set_global_state()
     Display *dpy;
     Window wnd;
     bool got_x11 = get_x11r6_dpy_wnd(&dpy, &wnd);
-    assert(got_x11);
+    struct wl_display *wl_dpy;
+    struct wl_surface *wl_srf;
+    bool got_wl = get_wl_dpy_srf(&wl_dpy, &wl_srf);
+    assert(got_x11 || got_wl);
 
     VkResult res;
     int i;
@@ -559,17 +567,31 @@ set_global_state()
                                   &render_pass);
     assert(res == VK_SUCCESS);
 
-    VkXlibSurfaceCreateInfoKHR xlib_surf_create_info = {
-        .sType = VK_STRUCTURE_TYPE_XLIB_SURFACE_CREATE_INFO_KHR,
-        .dpy = dpy,
-        .window = wnd,
-        .flags = 0,
-        .pNext = NULL,
-    };
+    if (got_wl) {
+        VkWaylandSurfaceCreateInfoKHR wl_surf_create_info = {
+            .sType = VK_STRUCTURE_TYPE_XLIB_SURFACE_CREATE_INFO_KHR,
+            .display = wl_dpy,
+            .surface = wl_srf,
+            .flags = 0,
+            .pNext = NULL,
+        };
 
-    res = VFN(vkCreateXlibSurfaceKHR)(instance, &xlib_surf_create_info, NULL,
-                                      &surface);
-    assert(res == VK_SUCCESS);
+        res = VFN(vkCreateWaylandSurfaceKHR)(instance, &wl_surf_create_info,
+                                             NULL, &surface);
+        assert(res == VK_SUCCESS);
+    } else {
+        VkXlibSurfaceCreateInfoKHR xlib_surf_create_info = {
+            .sType = VK_STRUCTURE_TYPE_XLIB_SURFACE_CREATE_INFO_KHR,
+            .dpy = dpy,
+            .window = wnd,
+            .flags = 0,
+            .pNext = NULL,
+        };
+
+        res = VFN(vkCreateXlibSurfaceKHR)(instance, &xlib_surf_create_info,
+                                          NULL, &surface);
+        assert(res == VK_SUCCESS);
+    }
 
     VkBool32 supported;
     res = VFN(vkGetPhysicalDeviceSurfaceSupportKHR)(phy_device, 0, surface,
