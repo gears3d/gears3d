@@ -45,6 +45,11 @@ int main(int argc, char **argv)
 
     angle_per_dt = (double)gears_options.speed / 180.0 * M_PI;
 
+    if (gears_options.sim_time > 0.0f) {
+        sim_fixed_step_time = gears_options.sim_time;
+        sim_fixed_step = true;
+    }
+
     switch (gears_options.api_type) {
     case API_OPENGL_COMPAT:
         drawer = &gl21_compat_drawer;

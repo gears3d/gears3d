@@ -11,6 +11,9 @@ uint64_t get_sim_time_ms(void);
 uint64_t frame_drawn(void);
 uint64_t get_frame_count(void);
 
+extern bool sim_fixed_step;
+extern float sim_fixed_step_time;
+
 extern uint32_t sim_width, sim_height;
 extern bool sim_done;
 
