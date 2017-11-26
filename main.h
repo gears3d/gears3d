@@ -99,4 +99,8 @@ void end_output(void);
 bool ready_for_new_frame(void);
 void new_frame_data(const void *rgba8);
 
+bool start_gif(const char *filename);
+void add_gif_frame(const void *rgba8, uint64_t delay_cs);
+void end_gif(void);
+
 #endif
