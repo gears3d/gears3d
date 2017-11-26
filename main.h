@@ -72,6 +72,7 @@ struct gears_options {
     bool vsync;
     uint64_t max_frames;
     uint64_t max_time_ms;
+    float sim_time;
     uint64_t speed;
 };
 

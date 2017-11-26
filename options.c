@@ -21,9 +21,25 @@ enum long_option_values {
     OPT_VSYNC,
     OPT_MAX_FRAMES,
     OPT_MAX_TIME,
+    OPT_SIM_TIME,
     OPT_SPEED,
     OPT_WINSYS,
 };
+
+
+static bool
+str_to_float(const char *str, float *result)
+{
+    char *endptr;
+    float res = strtof(str, &endptr);
+
+    if (*endptr != '\0' || res <= 0.0f) {
+        return false;
+    } else {
+        *result = res;
+        return true;
+    }
+}
 
 static bool
 str_to_uint64(const char *str, uint64_t *result)
@@ -64,6 +80,7 @@ print_help(void)
            LN("  --gles                run with OpenGLES")
            LN("  --max-frames=n        quit after `n` frames are drawn")
            LN("  --max-time=ms         quit after `ms` milliseconds")
+           LN("  --sim-time=ms         sim frame time in milliseconds (default is wall time)")
            LN("  --speed=dps           gear speed in degrees per second (default is 70)")
            LN("  --vk                  run with Vulkan")
            LN("  --vsync               run syncronized with monitor refresh")
@@ -120,6 +137,7 @@ parse_options(int argc, char **argv)
         { "gles",               OPT_GL_ES,              OPTPARSE_NONE },
         { "max-frames",         OPT_MAX_FRAMES,         OPTPARSE_REQUIRED },
         { "max-time",           OPT_MAX_TIME,           OPTPARSE_REQUIRED },
+        { "sim-time",           OPT_SIM_TIME,           OPTPARSE_REQUIRED },
         { "speed",              OPT_SPEED,              OPTPARSE_REQUIRED },
         { "vk",                 OPT_VK   ,              OPTPARSE_NONE },
         { "vsync",              OPT_VSYNC,              OPTPARSE_NONE },
@@ -133,6 +151,7 @@ parse_options(int argc, char **argv)
 
     memset(&gears_options, 0, sizeof(gears_options));
     gears_options.speed = 70; /* degrees per second */
+    gears_options.sim_time = 0.0f;
 
     optparse_init(&options, argv);
     while ((option = optparse_long(&options, longopts, NULL)) != -1) {
@@ -156,6 +175,9 @@ parse_options(int argc, char **argv)
             break;
         case OPT_MAX_TIME:
             ok = str_to_uint64(options.optarg, &gears_options.max_time_ms);
+            break;
+        case OPT_SIM_TIME:
+            ok = str_to_float(options.optarg, &gears_options.sim_time);
             break;
         case OPT_SPEED:
             ok = str_to_uint64(options.optarg, &gears_options.speed);
