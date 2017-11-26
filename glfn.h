@@ -13,6 +13,7 @@
 #define glClear GLFN(glClear)
 #define glClearColor GLFN(glClearColor)
 #define glEnable GLFN(glEnable)
+#define glReadPixels GLFN(glReadPixels)
 #define glViewport GLFN(glViewport)
 
 /* Used by Core profile and GLES drawers */
@@ -82,6 +83,8 @@
 DEF_PGLFN(glClear, void, (GLbitfield))
 DEF_PGLFN(glClearColor, void, (GLfloat, GLfloat, GLfloat, GLfloat))
 DEF_PGLFN(glEnable, void, (GLenum))
+DEF_PGLFN(glReadPixels, void, (GLint, GLint, GLsizei, GLsizei, GLenum, GLenum,
+                               GLvoid*))
 DEF_PGLFN(glViewport, void, (GLint, GLint, GLsizei, GLsizei))
 
 /* Used by Core profile and GLES drawers */

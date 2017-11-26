@@ -73,6 +73,8 @@ DECL_PGLFN(glShadeModel);
 DECL_PGLFN(glTranslatef);
 DECL_PGLFN(glVertex3f);
 
+DECL_PGLFN(glReadPixels);
+
 bool
 gl_locate_procs(gl_proc_getter getter)
 {
@@ -92,6 +94,8 @@ gl_locate_procs(gl_proc_getter getter)
     GPA(glClearColor);
     GPA(glEnable);
     GPA(glViewport);
+
+    GPA(glReadPixels);
 
     if (drawer->api_type != API_OPENGL_COMPAT) {
         GPA(glAttachShader);
