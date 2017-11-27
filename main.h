@@ -67,6 +67,7 @@ struct winsys {
     void (*handle_events)();
 };
 
+extern struct winsys winsys_gbm;
 extern struct winsys winsys_wl;
 extern struct winsys winsys_x11r6;
 
