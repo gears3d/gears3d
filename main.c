@@ -70,6 +70,9 @@ int main(int argc, char **argv)
     case WINSYS_WAYLAND:
         winsys = &winsys_wl;
         break;
+    case WINSYS_NONE:
+        winsys = &winsys_gbm;
+        break;
     case WINSYS_AUTO:
     case WINSYS_X11:
         winsys = &winsys_x11r6;
