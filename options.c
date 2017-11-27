@@ -87,7 +87,7 @@ print_help(void)
            LN("  --vk                  run with Vulkan")
            LN("  --vsync               run syncronized with monitor refresh")
            LN("  --win-size=WxH        `W` and `H` are the window size (default 300x300)")
-           LN("  --winsys=w            where `w` is wayland or x11")
+           LN("  --winsys=w            where `w` is gbm, wayland or x11")
            LN("  -h, --help            display help message and exit"));
 }
 
@@ -145,7 +145,9 @@ set_winsys(const char *winsys_str)
 {
     enum winsys_type winsys_type;
 
-    if (strcmp(winsys_str, "wayland") == 0) {
+    if (strcmp(winsys_str, "gbm") == 0) {
+        winsys_type = WINSYS_GBM;
+    } else if (strcmp(winsys_str, "wayland") == 0) {
         winsys_type = WINSYS_WAYLAND;
     } else if (strcmp(winsys_str, "x11") == 0) {
         winsys_type = WINSYS_X11;
