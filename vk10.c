@@ -86,6 +86,7 @@ DECL_PVKFN(vkDestroyImage);
 DECL_PVKFN(vkDestroySwapchainKHR);
 DECL_PVKFN(vkEndCommandBuffer);
 DECL_PVKFN(vkFreeMemory);
+DECL_PVKFN(vkGetBufferMemoryRequirements);
 DECL_PVKFN(vkGetDeviceQueue);
 DECL_PVKFN(vkGetImageMemoryRequirements);
 DECL_PVKFN(vkGetSwapchainImagesKHR);
@@ -330,6 +331,7 @@ init_vk_device()
     GET_D_PROC(vkDestroySwapchainKHR);
     GET_D_PROC(vkEndCommandBuffer);
     GET_D_PROC(vkFreeMemory);
+    GET_D_PROC(vkGetBufferMemoryRequirements);
     GET_D_PROC(vkGetDeviceQueue);
     GET_D_PROC(vkGetImageMemoryRequirements);
     GET_D_PROC(vkGetSwapchainImagesKHR);
@@ -663,10 +665,25 @@ set_global_state()
 
     unsigned int vertex_data_size =
         total_vertex_count * sizeof(struct gear_vert);
+
+    VkBufferCreateInfo buf_alloc_info = {
+        .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+        .size = vertex_data_size,
+        .usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+    };
+    res = VFN(vkCreateBuffer)(device, &buf_alloc_info, NULL, &vert_buf);
+    assert(res == VK_SUCCESS);
+
+    VkMemoryRequirements mem_req;
+    VFN(vkGetBufferMemoryRequirements)(device, vert_buf, &mem_req);
+    uint32_t mem_ty_idx = ffs(mem_req.memoryTypeBits);
+    assert(mem_ty_idx != 0);
+    mem_ty_idx--;
+
     VkMemoryAllocateInfo alloc_info = {
         .sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
         .allocationSize = vertex_data_size,
-        .memoryTypeIndex = 0,
+        .memoryTypeIndex = mem_ty_idx,
     };
     res = VFN(vkAllocateMemory)(device, &alloc_info, NULL, &vert_mem);
     assert(res == VK_SUCCESS);
@@ -685,14 +702,6 @@ set_global_state()
 
     VFN(vkUnmapMemory)(device, vert_mem);
     gear_map = NULL;
-
-    VkBufferCreateInfo buf_alloc_info = {
-        .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
-        .size = vertex_data_size,
-        .usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
-    };
-    res = VFN(vkCreateBuffer)(device, &buf_alloc_info, NULL, &vert_buf);
-    assert(res == VK_SUCCESS);
 
     res = VFN(vkBindBufferMemory)(device, vert_buf, vert_mem, 0);
     assert(res == VK_SUCCESS);
@@ -1048,9 +1057,14 @@ create_pipeline(int width, int height)
     VkMemoryRequirements depth_mem_req;
     VFN(vkGetImageMemoryRequirements)(device, depth_image, &depth_mem_req);
 
+    uint32_t mem_ty_idx = ffs(depth_mem_req.memoryTypeBits);
+    assert(mem_ty_idx != 0);
+    mem_ty_idx--;
+
     VkMemoryAllocateInfo depth_alloc_info = {
         .sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
         .allocationSize = depth_mem_req.size,
+        .memoryTypeIndex = mem_ty_idx,
     };
     res = VFN(vkAllocateMemory)(device, &depth_alloc_info, NULL, &depth_mem);
     assert(res == VK_SUCCESS);
