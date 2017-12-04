@@ -822,7 +822,7 @@ void GifWriteLzwImage(FILE* f, uint8_t* image, uint32_t left, uint32_t top,  uin
     // compression footer
     GifWriteCode( f, &stat, curCode, codeSize );
     GifWriteCode( f, &stat, clearCode, codeSize );
-    GifWriteCode( f, &stat, clearCode+1, minCodeSize+1 );
+    GifWriteCode( f, &stat, clearCode+1, codeSize );
 
     // write out the last partial chunk
     while( stat.bitIndex ) GifWriteBit(&stat, 0);
