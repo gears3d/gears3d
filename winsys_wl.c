@@ -189,7 +189,8 @@ create_window()
 
     if (api_is_gl()) {
         assert(dpy != NULL);
-        struct wl_egl_window *wnd = wl_egl_window_create(surface, 300, 300);
+        struct wl_egl_window *wnd =
+            wl_egl_window_create(surface, sim_width, sim_height);
         if (wnd == NULL)
             return false;
         if (!create_egl_context(dpy, wnd))

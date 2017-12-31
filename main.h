@@ -74,6 +74,8 @@ struct gears_options {
     uint64_t max_time_ms;
     float sim_time;
     uint64_t speed;
+    uint64_t win_width;
+    uint64_t win_height;
 };
 
 bool parse_options(int argc, char **argv);

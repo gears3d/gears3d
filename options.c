@@ -1,6 +1,7 @@
 /* Jordan Justen : gears3d is public domain */
 
 #include "main.h"
+#include "sim.h"
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -23,6 +24,7 @@ enum long_option_values {
     OPT_MAX_TIME,
     OPT_SIM_TIME,
     OPT_SPEED,
+    OPT_WINSIZE,
     OPT_WINSYS,
 };
 
@@ -84,6 +86,7 @@ print_help(void)
            LN("  --speed=dps           gear speed in degrees per second (default is 70)")
            LN("  --vk                  run with Vulkan")
            LN("  --vsync               run syncronized with monitor refresh")
+           LN("  --win-size=WxH        `W` and `H` are the window size (default 300x300)")
            LN("  --winsys=w            where `w` is wayland or x11")
            LN("  -h, --help            display help message and exit"));
 }
@@ -100,6 +103,41 @@ set_api_type(enum api_type api_type)
         printf("Multiple 3D API types were requested!\n\n");
         return false;
     }
+}
+
+static bool
+set_winsize(const char *winsize_str)
+{
+    char tmp[20], *scan;
+    uint64_t fst, snd;
+
+    if (strlen(winsize_str) >= sizeof(tmp)) {
+        printf("Unsupported win-size string length > %d\n\n",
+               (int)sizeof(tmp) - 1);
+        return false;
+    }
+
+    strcpy(tmp, winsize_str);
+    scan = strchr(tmp, 'x');
+    if (scan == NULL) {
+        printf("win-size string doesn't contain 'x' character\n\n");
+        return false;
+    }
+    *scan = '\0';
+
+    if (!str_to_uint64(tmp, &fst)) {
+        printf("win-size width isn't valid\n\n");
+        return false;
+    }
+
+    if (!str_to_uint64(scan + 1, &snd)) {
+        printf("win-size height isn't valid\n\n");
+        return false;
+    }
+
+    gears_options.win_width = fst;
+    gears_options.win_height = snd;
+    return true;
 }
 
 static bool
@@ -141,6 +179,7 @@ parse_options(int argc, char **argv)
         { "speed",              OPT_SPEED,              OPTPARSE_REQUIRED },
         { "vk",                 OPT_VK   ,              OPTPARSE_NONE },
         { "vsync",              OPT_VSYNC,              OPTPARSE_NONE },
+        { "win-size",           OPT_WINSIZE,            OPTPARSE_REQUIRED },
         { "winsys",             OPT_WINSYS,             OPTPARSE_REQUIRED },
         { 0 },
     };
@@ -152,6 +191,8 @@ parse_options(int argc, char **argv)
     memset(&gears_options, 0, sizeof(gears_options));
     gears_options.speed = 70; /* degrees per second */
     gears_options.sim_time = 0.0f;
+    gears_options.win_width = 300;
+    gears_options.win_height = 300;
 
     optparse_init(&options, argv);
     while ((option = optparse_long(&options, longopts, NULL)) != -1) {
@@ -188,6 +229,9 @@ parse_options(int argc, char **argv)
         case OPT_VSYNC:
             gears_options.vsync = true;
             break;
+        case OPT_WINSIZE:
+            ok = set_winsize(options.optarg);
+            break;
         case OPT_WINSYS:
             ok = set_winsys(options.optarg);
             break;
@@ -202,6 +246,9 @@ parse_options(int argc, char **argv)
             return false;
         }
     }
+
+    sim_width = gears_options.win_width;
+    sim_height = gears_options.win_height;
 
     return true;
 }
