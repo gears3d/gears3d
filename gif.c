@@ -25,6 +25,9 @@ void add_gif_frame(const void *rgba8, uint64_t delay_cs)
     if (gw.f == NULL || rgba8 == NULL)
         return;
 
+    if (!delay_cs)
+        delay_cs = 1;
+
     GifWriteFrame(&gw, rgba8, sim_width, sim_height, delay_cs, 8, true);
 }
 
