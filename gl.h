@@ -20,4 +20,6 @@ bool gl_uniform_mat4(GLuint program, const char *name, const GLfloat* mat4);
 bool gl_attrib_ptr(GLuint program, const char *name, GLint size, GLenum type,
                    GLboolean normalized, GLsizei stride, GLuint offset);
 
+bool gl_post_swap_buffer(void);
+
 #endif

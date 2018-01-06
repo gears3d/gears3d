@@ -247,6 +247,8 @@ egl_swap_buffers()
 {
     assert(dpy != NULL && surf != None);
     eglSwapBuffers(dpy, surf);
+    gl_post_swap_buffer();
+
     return true;
 }
 

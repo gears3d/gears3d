@@ -90,4 +90,9 @@ extern struct gears_options gears_options;
 
 void gl_swapbuffers();
 
+bool init_output(void);
+void end_output(void);
+bool ready_for_new_frame(void);
+void new_frame_data(const void *rgba8);
+
 #endif
