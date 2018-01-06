@@ -17,6 +17,7 @@ enum api_type {
 
 enum output_type {
     OUTPUT_NONE,
+    OUTPUT_PPM,
 };
 
 enum winsys_type {

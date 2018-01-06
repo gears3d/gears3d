@@ -83,7 +83,7 @@ print_help(void)
            LN("  --gles                run with OpenGLES")
            LN("  --max-frames=n        quit after `n` frames are drawn")
            LN("  --max-time=ms         quit after `ms` milliseconds")
-           LN("  --output-file=fn      save to file `fn`")
+           LN("  --output-file=fn      save to file `fn` (ppm supported)")
            LN("  --sim-time=ms         sim frame time in milliseconds (default is wall time)")
            LN("  --speed=dps           gear speed in degrees per second (default is 70)")
            LN("  --vk                  run with Vulkan")
@@ -114,6 +114,10 @@ set_output_file(const char *filename)
     if (!ext || ext[1] == '\0') {
         printf("No output file extension found!\n\n");
         return false;
+    }
+
+    if (strcmp(ext, ".ppm") == 0) {
+        gears_options.output_type = OUTPUT_PPM;
     }
 
     if (gears_options.output_type != OUTPUT_NONE) {
