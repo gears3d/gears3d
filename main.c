@@ -92,6 +92,8 @@ int main(int argc, char **argv)
     if (winsys->name)
         printf("Window system: %s\n", winsys->name);
 
+    if (!init_output())
+        return EXIT_FAILURE;
     init_sim();
 
     if (drawer->upgrade_drawer)
@@ -134,5 +136,6 @@ int main(int argc, char **argv)
     }
 
     drawer->destruct();
+    end_output();
     return 0;
 }

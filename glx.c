@@ -194,6 +194,7 @@ glx_swap_buffers(Display *dpy, GLXDrawable draw)
 {
     assert(dpy != NULL && draw != None);
     glXSwapBuffers(dpy, draw);
+    gl_post_swap_buffer();
     return true;
 }
 
