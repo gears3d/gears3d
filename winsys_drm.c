@@ -113,6 +113,14 @@ swap_buffers()
     egl_swap_buffers();
 }
 
+struct winsys winsys_drm = {
+    .name = "DRM",
+    .init = init,
+    .create_window = create_window,
+    .swap_buffers = swap_buffers,
+    .handle_events = handle_events,
+};
+
 struct winsys winsys_gbm = {
     .name = "GBM",
     .init = init,

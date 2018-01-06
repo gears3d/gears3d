@@ -23,6 +23,7 @@ enum output_type {
 
 enum winsys_type {
     WINSYS_AUTO,
+    WINSYS_DRM,
     WINSYS_GBM,
     WINSYS_WAYLAND,
     WINSYS_X11,
