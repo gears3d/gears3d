@@ -18,6 +18,7 @@ enum long_option_values {
     OPT_GL_CORE = 0x10000,
     OPT_GL_COMPAT,
     OPT_GL_ES,
+    OPT_OUTPUT_FILE,
     OPT_VK,
     OPT_VSYNC,
     OPT_MAX_FRAMES,
@@ -82,6 +83,7 @@ print_help(void)
            LN("  --gles                run with OpenGLES")
            LN("  --max-frames=n        quit after `n` frames are drawn")
            LN("  --max-time=ms         quit after `ms` milliseconds")
+           LN("  --output-file=fn      save to file `fn`")
            LN("  --sim-time=ms         sim frame time in milliseconds (default is wall time)")
            LN("  --speed=dps           gear speed in degrees per second (default is 70)")
            LN("  --vk                  run with Vulkan")
@@ -101,6 +103,25 @@ set_api_type(enum api_type api_type)
         return true;
     } else {
         printf("Multiple 3D API types were requested!\n\n");
+        return false;
+    }
+}
+
+static bool
+set_output_file(const char *filename)
+{
+    const char *ext = strrchr(filename, '.');
+    if (!ext || ext[1] == '\0') {
+        printf("No output file extension found!\n\n");
+        return false;
+    }
+
+    if (gears_options.output_type != OUTPUT_NONE) {
+        gears_options.output_file = filename;
+        gears_options.extension_offset = (uint32_t)(ext - filename);
+        return true;
+    } else {
+        printf("Output file extension (%s) not supported!\n\n", ext + 1);
         return false;
     }
 }
@@ -177,6 +198,7 @@ parse_options(int argc, char **argv)
         { "gles",               OPT_GL_ES,              OPTPARSE_NONE },
         { "max-frames",         OPT_MAX_FRAMES,         OPTPARSE_REQUIRED },
         { "max-time",           OPT_MAX_TIME,           OPTPARSE_REQUIRED },
+        { "output-file",        OPT_OUTPUT_FILE,        OPTPARSE_REQUIRED },
         { "sim-time",           OPT_SIM_TIME,           OPTPARSE_REQUIRED },
         { "speed",              OPT_SPEED,              OPTPARSE_REQUIRED },
         { "vk",                 OPT_VK   ,              OPTPARSE_NONE },
@@ -191,6 +213,7 @@ parse_options(int argc, char **argv)
     (void) optparse_arg; /* Silence compiler warning for unused function */
 
     memset(&gears_options, 0, sizeof(gears_options));
+    gears_options.output_type = OUTPUT_NONE;
     gears_options.speed = 70; /* degrees per second */
     gears_options.sim_time = 0.0f;
     gears_options.win_width = 300;
@@ -218,6 +241,9 @@ parse_options(int argc, char **argv)
             break;
         case OPT_MAX_TIME:
             ok = str_to_uint64(options.optarg, &gears_options.max_time_ms);
+            break;
+        case OPT_OUTPUT_FILE:
+            ok = set_output_file(options.optarg);
             break;
         case OPT_SIM_TIME:
             ok = str_to_float(options.optarg, &gears_options.sim_time);

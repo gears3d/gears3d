@@ -15,6 +15,10 @@ enum api_type {
     API_VULKAN,
 };
 
+enum output_type {
+    OUTPUT_NONE,
+};
+
 enum winsys_type {
     WINSYS_AUTO,
     WINSYS_GBM,
@@ -79,6 +83,9 @@ struct gears_options {
     uint64_t speed;
     uint64_t win_width;
     uint64_t win_height;
+    enum output_type output_type;
+    const char *output_file;
+    int extension_offset;
 };
 
 bool parse_options(int argc, char **argv);
