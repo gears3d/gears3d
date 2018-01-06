@@ -49,6 +49,8 @@ static void new_ppm_frame(const void *rgba8)
 bool init_output()
 {
     switch(gears_options.output_type) {
+    case OUTPUT_GIF:
+        return start_gif(gears_options.output_file);
     case OUTPUT_PPM:
     case OUTPUT_NONE:
         return true;
@@ -60,6 +62,9 @@ bool init_output()
 void end_output()
 {
     switch(gears_options.output_type) {
+    case OUTPUT_GIF:
+        end_gif();
+        break;
     case OUTPUT_PPM:
     case OUTPUT_NONE:
     default:
@@ -74,6 +79,8 @@ bool ready_for_new_frame()
         return true;
     }
     switch(gears_options.output_type) {
+    case OUTPUT_GIF:
+        return (this_frame_ms / 10) > (last_frame_ms / 10);
     case OUTPUT_PPM:
         return this_frame_ms > last_frame_ms;
     case OUTPUT_NONE:
@@ -85,6 +92,9 @@ bool ready_for_new_frame()
 void new_frame_data(const void *rgba8)
 {
     switch(gears_options.output_type) {
+    case OUTPUT_GIF:
+        add_gif_frame(rgba8, (this_frame_ms / 10) - (last_frame_ms / 10));
+        break;
     case OUTPUT_PPM:
         new_ppm_frame(rgba8);
         break;
