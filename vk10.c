@@ -5,6 +5,7 @@
 #include <string.h>
 
 #include "main.h"
+#include "sim.h"
 #include "winsys_x11r6.h"
 #include "winsys_wl.h"
 #include "g_math.h"
@@ -1335,6 +1336,45 @@ update_uniform_gear_angles()
     uniform_map = NULL;
 }
 
+static void
+read_pixels(void *rgba8)
+{
+    VkResult res;
+    uint8_t *capture_map;
+    unsigned buf_size = 4 * sim_width * sim_height;
+    res = VFN(vkMapMemory)(device, capture_mem, 0, buf_size, 0,
+                           (void**)&capture_map);
+    assert(res == VK_SUCCESS);
+
+    unsigned int p;
+    for (p = 0; p < buf_size; p += 4) {
+        ((uint8_t*)rgba8)[p + 0] = capture_map[p + 2];
+        ((uint8_t*)rgba8)[p + 1] = capture_map[p + 1];
+        ((uint8_t*)rgba8)[p + 2] = capture_map[p + 0];
+        ((uint8_t*)rgba8)[p + 3] = capture_map[p + 3];
+    }
+
+    VFN(vkUnmapMemory)(device, capture_mem);
+    capture_map = NULL;
+}
+
+static bool
+post_draw(void)
+{
+    if (gears_options.output_type == OUTPUT_NONE)
+        return true;
+
+    if (ready_for_new_frame()) {
+        unsigned buf_size = 4 * sim_width * sim_height;
+        void *rgba8 = malloc(buf_size);
+        read_pixels(rgba8);
+        new_frame_data(rgba8);
+        free(rgba8);
+    }
+
+    return true;
+}
+
 static int32_t
 get_wsi_image()
 {
@@ -1411,6 +1451,8 @@ draw()
     VFN(vkResetFences)(device, 1, &fence);
 
     wsi_present(index);
+
+    post_draw();
 
     pthread_mutex_unlock(&win_size_lock);
 }
