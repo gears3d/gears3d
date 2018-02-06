@@ -979,6 +979,8 @@ static VkSwapchainKHR swapchain = VK_NULL_HANDLE;
 static VkImage depth_image = VK_NULL_HANDLE;
 static VkDeviceMemory depth_mem = VK_NULL_HANDLE;
 static pthread_mutex_t win_size_lock = PTHREAD_MUTEX_INITIALIZER;
+static VkDeviceMemory capture_mem = VK_NULL_HANDLE;
+static VkBuffer capture_buf = VK_NULL_HANDLE;
 
 static void
 create_pipeline(int width, int height)
@@ -1011,7 +1013,9 @@ create_pipeline(int width, int height)
         .imageColorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR,
         .imageExtent = { width, height },
         .imageArrayLayers = 1,
-        .imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
+        .imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT |
+                      (gears_options.output_type != OUTPUT_NONE ?
+                       VK_IMAGE_USAGE_TRANSFER_SRC_BIT : 0),
         .imageSharingMode = VK_SHARING_MODE_EXCLUSIVE,
         .queueFamilyIndexCount = 1,
         .pQueueFamilyIndices = family_indices,
@@ -1075,6 +1079,58 @@ create_pipeline(int width, int height)
 
     res = VFN(vkBindImageMemory)(device, depth_image, depth_mem, 0);
     assert(res == VK_SUCCESS);
+
+    if (gears_options.output_type != OUTPUT_NONE) {
+        if (capture_buf != VK_NULL_HANDLE) {
+            assert(capture_mem != VK_NULL_HANDLE);
+            VFN(vkDestroyBuffer)(device, capture_buf, NULL);
+            capture_buf = VK_NULL_HANDLE;
+            VFN(vkFreeMemory)(device, capture_mem, NULL);
+            capture_mem = VK_NULL_HANDLE;
+        }
+
+        unsigned int capture_data_size = 4 * width * height;
+        VkBufferCreateInfo capture_buf_alloc_info = {
+            .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+            .size = capture_data_size,
+            .usage = VK_BUFFER_USAGE_STORAGE_TEXEL_BUFFER_BIT |
+            VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+        };
+        res = VFN(vkCreateBuffer)(device, &capture_buf_alloc_info, NULL,
+                                  &capture_buf);
+        assert(res == VK_SUCCESS);
+
+        VkMemoryRequirements capture_mem_req;
+        VFN(vkGetBufferMemoryRequirements)(device, capture_buf, &capture_mem_req);
+        mem_ty_idx = ffs(capture_mem_req.memoryTypeBits);
+        assert(mem_ty_idx != 0);
+        mem_ty_idx--;
+
+        VkMemoryAllocateInfo capture_alloc_info = {
+            .sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
+            .allocationSize = capture_mem_req.size,
+            .memoryTypeIndex = mem_ty_idx,
+        };
+        res = VFN(vkAllocateMemory)(device, &capture_alloc_info, NULL, &capture_mem);
+        assert(res == VK_SUCCESS);
+
+        res = VFN(vkBindBufferMemory)(device, capture_buf, capture_mem, 0);
+        assert(res == VK_SUCCESS);
+    }
+
+    VkBufferImageCopy copy_region = {
+        .bufferOffset = 0,
+        .bufferRowLength = width,
+        .bufferImageHeight = height,
+        .imageSubresource = {
+            .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+            .mipLevel = 0,
+            .baseArrayLayer = 0,
+            .layerCount = 1,
+        },
+        .imageOffset = { .x = 0, .y = 0, .z = 0 },
+        .imageExtent = { .width = width, .height = height, .depth = 1 },
+    };
 
     int image_num;
     for (image_num = 0; image_num < NUM_IMAGES; image_num++) {
@@ -1191,6 +1247,12 @@ create_pipeline(int width, int height)
         }
 
         VFN(vkCmdEndRenderPass)(cmd_buf);
+        if (gears_options.output_type != OUTPUT_NONE) {
+            VFN(vkCmdCopyImageToBuffer)(cmd_buf, images[image_num],
+                                        VK_IMAGE_LAYOUT_GENERAL,
+                                        capture_buf, 1,
+                                        &copy_region);
+        }
         VFN(vkEndCommandBuffer)(cmd_buf);
     }
 
