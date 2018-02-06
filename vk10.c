@@ -5,6 +5,7 @@
 #include <string.h>
 
 #include "main.h"
+#include "sim.h"
 #include "winsys_x11r6.h"
 #include "winsys_wl.h"
 #include "g_math.h"
@@ -1291,6 +1292,39 @@ update_uniform_gear_angles()
 }
 
 static void
+read_pixels(void *rgba8)
+{
+    VkResult res;
+    void *capture_map;
+    unsigned buf_size = 4 * sim_width * sim_height;
+    res = VFN(vkMapMemory)(device, capture_mem, 0, buf_size, 0,
+                           (void**)&capture_map);
+    assert(res == VK_SUCCESS);
+
+    memcpy(rgba8, capture_map, buf_size);
+
+    VFN(vkUnmapMemory)(device, capture_mem);
+    capture_map = NULL;
+}
+
+static bool
+post_draw(void)
+{
+    if (gears_options.output_type == OUTPUT_NONE)
+        return true;
+
+    if (ready_for_new_frame()) {
+        unsigned buf_size = 4 * sim_width * sim_height;
+        void *rgba8 = malloc(buf_size);
+        read_pixels(rgba8);
+        new_frame_data(rgba8);
+        free(rgba8);
+    }
+
+    return true;
+}
+
+static void
 draw()
 {
     uint32_t timeouts = 0;
@@ -1344,6 +1378,8 @@ draw()
     };
     res = VFN(vkQueuePresentKHR)(queue, &present_info);
     assert(res == VK_SUCCESS);
+
+    post_draw();
 
     pthread_mutex_unlock(&win_size_lock);
 }
