@@ -1100,8 +1100,7 @@ create_pipeline(int width, int height)
             .viewType = VK_IMAGE_VIEW_TYPE_2D,
             .format = VK_FORMAT_D16_UNORM,
             .subresourceRange = {
-                .aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT |
-                              VK_IMAGE_ASPECT_STENCIL_BIT,
+                .aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT,
                 .baseMipLevel = 0,
                 .levelCount = 1,
                 .baseArrayLayer = 0,
