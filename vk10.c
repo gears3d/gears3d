@@ -862,11 +862,6 @@ set_global_state()
             .stride = 6 * sizeof(float),
             .inputRate = VK_VERTEX_INPUT_RATE_VERTEX,
         },
-        {
-            .binding = 1,
-            .stride = 6 * sizeof(float),
-            .inputRate = VK_VERTEX_INPUT_RATE_VERTEX,
-        },
     };
     VkVertexInputAttributeDescription vert_input_attrib_desc[] = {
         {
@@ -877,14 +872,14 @@ set_global_state()
         },
         {
             .location = 1,
-            .binding = 1,
+            .binding = 0,
             .format = VK_FORMAT_R32G32B32_SFLOAT,
-            .offset = 0,
+            .offset = 3 * sizeof(float),
         },
     };
     VkPipelineVertexInputStateCreateInfo vert_input_create_info = {
         .sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
-        .vertexBindingDescriptionCount = 2,
+        .vertexBindingDescriptionCount = 1,
         .pVertexBindingDescriptions = vert_input_binding_desc,
         .vertexAttributeDescriptionCount = 2,
         .pVertexAttributeDescriptions = vert_input_attrib_desc,
@@ -1151,9 +1146,9 @@ create_pipeline(int width, int height)
         VkCommandBuffer cmd_buf = cmd_buffers[image_num];
         VFN(vkCmdBeginRenderPass)(cmd_buf, &render_pass_begin_info,
                                   VK_SUBPASS_CONTENTS_INLINE);
-        VkBuffer buffers[] = { vert_buf, vert_buf, };
-        VFN(vkCmdBindVertexBuffers)(cmd_buf, 0, 2, buffers,
-                                    (VkDeviceSize[]) { 0, 3 * sizeof(float) });
+        VkBuffer buffers[] = { vert_buf, };
+        VFN(vkCmdBindVertexBuffers)(cmd_buf, 0, 1, buffers,
+                                    (VkDeviceSize[]) { 0 });
         VFN(vkCmdBindPipeline)(cmd_buf, VK_PIPELINE_BIND_POINT_GRAPHICS,
                                pipeline);
 
