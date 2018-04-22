@@ -581,6 +581,9 @@ set_global_state()
     struct wl_surface *wl_srf;
 
     switch (gears_options.winsys_type) {
+    case WINSYS_NONE:
+            active_winsys = WINSYS_NONE;
+            break;
     case WINSYS_WAYLAND:
         if (get_wl_dpy_srf(&wl_dpy, &wl_srf))
             active_winsys = gears_options.winsys_type;
@@ -596,7 +599,7 @@ set_global_state()
         else if (get_wl_dpy_srf(&wl_dpy, &wl_srf))
             active_winsys = WINSYS_WAYLAND;
         else
-            assert(false);
+            active_winsys = WINSYS_NONE;
     }
 
     assert(gears_options.winsys_type == WINSYS_AUTO ||
@@ -691,6 +694,8 @@ set_global_state()
         init_with_surface();
         break;
     }
+    case WINSYS_NONE:
+        break;
     default:
         assert(false);
         break;
