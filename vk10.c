@@ -183,6 +183,7 @@ static bool immediate_present_supported = false;
 static bool mailbox_present_supported = false;
 static VkSemaphore semaphore;
 static VkFence fence;
+static bool using_wsi = false;
 static enum winsys_type active_winsys;
 
 static VkCommandBuffer cmd_buffers[NUM_IMAGES];
@@ -604,6 +605,8 @@ set_global_state()
 
     assert(gears_options.winsys_type == WINSYS_AUTO ||
            gears_options.winsys_type == active_winsys);
+
+    using_wsi = active_winsys == WINSYS_WAYLAND || active_winsys == WINSYS_X11;
 
     VkResult res;
     int i;
