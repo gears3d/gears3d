@@ -1269,16 +1269,12 @@ update_uniform_gear_angles()
     uniform_map = NULL;
 }
 
-static void
-draw()
+static int32_t
+get_wsi_image()
 {
     uint32_t timeouts = 0;
     uint32_t index;
     VkResult res;
-
-    update_uniform_gear_angles();
-
-    pthread_mutex_lock(&win_size_lock);
 
     do {
         res = VFN(vkAcquireNextImageKHR)(device, swapchain, UINT64_MAX,
@@ -1292,11 +1288,45 @@ draw()
 
     /* The window was probably resized, so skip this frame */
     if (res == VK_ERROR_OUT_OF_DATE_KHR) {
-        pthread_mutex_unlock(&win_size_lock);
-        return;
+        return -1;
     }
 
     assert(res == VK_SUCCESS);
+
+    return index;
+}
+
+static void
+wsi_present(uint32_t index)
+{
+    VkResult res;
+    VkPresentInfoKHR present_info = {
+        .sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
+        .swapchainCount = 1,
+        .pSwapchains = &swapchain,
+        .pImageIndices = &index,
+        .pResults = &res,
+    };
+    res = VFN(vkQueuePresentKHR)(queue, &present_info);
+    assert(res == VK_SUCCESS);
+}
+
+static void
+draw()
+{
+    VkResult res;
+    int32_t index;
+
+    update_uniform_gear_angles();
+
+    pthread_mutex_lock(&win_size_lock);
+
+    index = get_wsi_image();
+
+    if (index < 0) {
+        pthread_mutex_unlock(&win_size_lock);
+        return;
+    }
 
     VkPipelineStageFlags state_flags =
         VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
@@ -1314,15 +1344,7 @@ draw()
     res = VFN(vkWaitForFences)(device, 1, &fence, true, INT64_MAX);
     VFN(vkResetFences)(device, 1, &fence);
 
-    VkPresentInfoKHR present_info = {
-        .sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
-        .swapchainCount = 1,
-        .pSwapchains = &swapchain,
-        .pImageIndices = &index,
-        .pResults = &res,
-    };
-    res = VFN(vkQueuePresentKHR)(queue, &present_info);
-    assert(res == VK_SUCCESS);
+    wsi_present(index);
 
     pthread_mutex_unlock(&win_size_lock);
 }
