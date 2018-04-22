@@ -1014,6 +1014,8 @@ set_global_state()
 static VkSwapchainKHR swapchain = VK_NULL_HANDLE;
 static VkImage depth_image = VK_NULL_HANDLE;
 static VkDeviceMemory depth_mem = VK_NULL_HANDLE;
+static VkImage non_wsi_images[NUM_IMAGES] = { VK_NULL_HANDLE, };
+static VkDeviceMemory non_wsi_mem = VK_NULL_HANDLE;
 static pthread_mutex_t win_size_lock = PTHREAD_MUTEX_INITIALIZER;
 static VkDeviceMemory capture_mem = VK_NULL_HANDLE;
 static VkBuffer capture_buf = VK_NULL_HANDLE;
@@ -1069,6 +1071,55 @@ create_wsi_images(int width, int height, VkImage *images)
 }
 
 static void
+create_non_wsi_images(int width, int height, VkImage *images)
+{
+    VkResult res;
+
+    VkImageCreateInfo info = {
+        .sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
+        .imageType = VK_IMAGE_TYPE_2D,
+        .format = VK_FORMAT_B8G8R8A8_UNORM,
+        .extent = { .width = width, .height = height, .depth = 1 },
+        .mipLevels = 1,
+        .arrayLayers = 1,
+        .samples = VK_SAMPLE_COUNT_1_BIT,
+        .tiling = VK_IMAGE_TILING_OPTIMAL,
+        .usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
+        .initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+    };
+
+    int image_num;
+    for (image_num = 0; image_num < NUM_IMAGES; image_num++) {
+        res = VFN(vkCreateImage)(device, &info, NULL, &images[image_num]);
+        assert(res == VK_SUCCESS);
+        non_wsi_images[image_num] = images[image_num];
+    }
+
+    VkMemoryRequirements mem_req;
+    VFN(vkGetImageMemoryRequirements)(device, images[0], &mem_req);
+
+    uint32_t mem_ty_idx = ffs(mem_req.memoryTypeBits);
+    assert(mem_ty_idx != 0);
+    mem_ty_idx--;
+
+    VkDeviceSize image_size = ALIGN(mem_req.size, mem_req.alignment);
+    VkMemoryAllocateInfo alloc_info = {
+        .sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
+        .allocationSize = image_size * NUM_IMAGES,
+        .memoryTypeIndex = mem_ty_idx,
+    };
+
+    res = VFN(vkAllocateMemory)(device, &alloc_info, NULL, &non_wsi_mem);
+    assert(res == VK_SUCCESS);
+
+    for (image_num = 0; image_num < NUM_IMAGES; image_num++) {
+        res = VFN(vkBindImageMemory)(device, images[image_num], non_wsi_mem,
+                                     image_size * image_num);
+        assert(res == VK_SUCCESS);
+    }
+}
+
+static void
 create_pipeline(int width, int height)
 {
     VkResult res;
@@ -1083,6 +1134,9 @@ create_pipeline(int width, int height)
     VkImage images[NUM_IMAGES];
 
     switch (active_winsys) {
+    case WINSYS_NONE:
+        create_non_wsi_images(width, height, images);
+        break;
     case WINSYS_WAYLAND:
     case WINSYS_X11:
         create_wsi_images(width, height, images);
