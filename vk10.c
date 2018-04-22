@@ -1007,16 +1007,9 @@ static VkDeviceMemory depth_mem = VK_NULL_HANDLE;
 static pthread_mutex_t win_size_lock = PTHREAD_MUTEX_INITIALIZER;
 
 static void
-create_pipeline(int width, int height)
+create_wsi_images(int width, int height, VkImage *images)
 {
     VkResult res;
-
-    pthread_mutex_lock(&win_size_lock);
-
-    if (swapchain != VK_NULL_HANDLE) {
-        VFN(vkDestroySwapchainKHR)(device, swapchain, NULL);
-        swapchain = VK_NULL_HANDLE;
-    }
 
     VkPresentModeKHR present_mode = VK_PRESENT_MODE_FIFO_KHR;
     if (!gears_options.vsync) {
@@ -1055,11 +1048,34 @@ create_pipeline(int width, int height)
     res = VFN(vkGetSwapchainImagesKHR)(device, swapchain, &image_count, NULL);
     assert(res == VK_SUCCESS && image_count >= NUM_IMAGES);
 
-    VkImage images[NUM_IMAGES];
     image_count = NUM_IMAGES;
     res = VFN(vkGetSwapchainImagesKHR)(device, swapchain, &image_count,
                                        images);
     assert(res == VK_SUCCESS);
+}
+
+static void
+create_pipeline(int width, int height)
+{
+    VkResult res;
+
+    pthread_mutex_lock(&win_size_lock);
+
+    if (swapchain != VK_NULL_HANDLE) {
+        VFN(vkDestroySwapchainKHR)(device, swapchain, NULL);
+        swapchain = VK_NULL_HANDLE;
+    }
+
+    VkImage images[NUM_IMAGES];
+
+    switch (active_winsys) {
+    case WINSYS_WAYLAND:
+    case WINSYS_X11:
+        create_wsi_images(width, height, images);
+        break;
+    default:
+        assert(false);
+    }
 
     if (depth_image != VK_NULL_HANDLE) {
         assert(depth_mem != VK_NULL_HANDLE);
