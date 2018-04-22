@@ -1479,6 +1479,15 @@ wsi_present(uint32_t index)
     assert(res == VK_SUCCESS);
 }
 
+static int32_t
+get_non_wsi_image()
+{
+    static int32_t index = 0;
+    int32_t ret_index = index;
+    index = (index + 1) % NUM_IMAGES;
+    return ret_index;
+}
+
 static void
 draw()
 {
@@ -1489,7 +1498,7 @@ draw()
 
     pthread_mutex_lock(&win_size_lock);
 
-    index = get_wsi_image();
+    index = using_wsi ? get_wsi_image() : get_non_wsi_image();
 
     if (index < 0) {
         pthread_mutex_unlock(&win_size_lock);
@@ -1512,7 +1521,8 @@ draw()
     res = VFN(vkWaitForFences)(device, 1, &fence, true, INT64_MAX);
     VFN(vkResetFences)(device, 1, &fence);
 
-    wsi_present(index);
+    if (using_wsi)
+        wsi_present(index);
 
     post_draw();
 
