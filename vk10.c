@@ -180,6 +180,7 @@ static bool immediate_present_supported = false;
 static bool mailbox_present_supported = false;
 static VkSemaphore semaphore;
 static VkFence fence;
+static enum winsys_type active_winsys;
 
 static VkCommandBuffer cmd_buffers[NUM_IMAGES];
 static VkDeviceMemory vert_mem;
@@ -505,11 +506,32 @@ set_global_state()
 {
     Display *dpy;
     Window wnd;
-    bool got_x11 = get_x11r6_dpy_wnd(&dpy, &wnd);
     struct wl_display *wl_dpy;
     struct wl_surface *wl_srf;
-    bool got_wl = get_wl_dpy_srf(&wl_dpy, &wl_srf);
-    assert(got_x11 || got_wl);
+
+    switch (gears_options.winsys_type) {
+    case WINSYS_WAYLAND:
+        if (get_wl_dpy_srf(&wl_dpy, &wl_srf))
+            active_winsys = gears_options.winsys_type;
+        break;
+    case WINSYS_X11:
+        if (get_x11r6_dpy_wnd(&dpy, &wnd))
+            active_winsys = gears_options.winsys_type;
+        break;
+    case WINSYS_AUTO:
+    default:
+        if (get_x11r6_dpy_wnd(&dpy, &wnd))
+            active_winsys = WINSYS_X11;
+        else if (get_wl_dpy_srf(&wl_dpy, &wl_srf))
+            active_winsys = WINSYS_WAYLAND;
+        else
+            assert(false);
+    }
+
+    assert(gears_options.winsys_type == WINSYS_AUTO ||
+           gears_options.winsys_type == active_winsys);
+
+    bool got_wl = active_winsys == WINSYS_WAYLAND;
 
     VkResult res;
     int i;
