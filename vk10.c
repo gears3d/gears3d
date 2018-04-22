@@ -502,121 +502,9 @@ win_resize(int width, int height)
 }
 
 static void
-set_global_state()
+init_with_surface()
 {
-    Display *dpy;
-    Window wnd;
-    struct wl_display *wl_dpy;
-    struct wl_surface *wl_srf;
-
-    switch (gears_options.winsys_type) {
-    case WINSYS_WAYLAND:
-        if (get_wl_dpy_srf(&wl_dpy, &wl_srf))
-            active_winsys = gears_options.winsys_type;
-        break;
-    case WINSYS_X11:
-        if (get_x11r6_dpy_wnd(&dpy, &wnd))
-            active_winsys = gears_options.winsys_type;
-        break;
-    case WINSYS_AUTO:
-    default:
-        if (get_x11r6_dpy_wnd(&dpy, &wnd))
-            active_winsys = WINSYS_X11;
-        else if (get_wl_dpy_srf(&wl_dpy, &wl_srf))
-            active_winsys = WINSYS_WAYLAND;
-        else
-            assert(false);
-    }
-
-    assert(gears_options.winsys_type == WINSYS_AUTO ||
-           gears_options.winsys_type == active_winsys);
-
-    bool got_wl = active_winsys == WINSYS_WAYLAND;
-
     VkResult res;
-    int i;
-
-    VkAttachmentDescription att_desc[] = {
-        {
-            .format = VK_FORMAT_B8G8R8A8_UNORM,
-            .samples = VK_SAMPLE_COUNT_1_BIT,
-            .loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
-            .storeOp = VK_ATTACHMENT_STORE_OP_STORE,
-            .initialLayout = VK_IMAGE_LAYOUT_UNDEFINED,
-            .finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
-        },
-        {
-            .format = VK_FORMAT_D16_UNORM,
-            .samples = VK_SAMPLE_COUNT_1_BIT,
-            .loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
-            .storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
-            .stencilLoadOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
-            .stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
-            .initialLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
-            .finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
-        },
-    };
-    VkAttachmentReference att_ref = {
-        .attachment = 0,
-        .layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL
-    };
-    VkAttachmentReference unused_att_ref = {
-        .attachment = VK_ATTACHMENT_UNUSED,
-        .layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL
-    };
-    VkAttachmentReference depth_att_ref = {
-        .attachment = 1,
-        .layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
-    };
-    uint32_t preserve_att[] = { 0 };
-    VkSubpassDescription subpass_desc = {
-        .pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS,
-        .inputAttachmentCount = 0,
-        .colorAttachmentCount = 1,
-        .pColorAttachments = &att_ref,
-        .pResolveAttachments = &unused_att_ref,
-        .pDepthStencilAttachment = &depth_att_ref,
-        .preserveAttachmentCount = 1,
-        .pPreserveAttachments = preserve_att,
-    };
-    VkRenderPassCreateInfo render_pass_create_info = {
-        .sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO,
-        .attachmentCount = 2,
-        .pAttachments = att_desc,
-        .subpassCount = 1,
-        .pSubpasses = &subpass_desc,
-        .dependencyCount = 0,
-    };
-    res = VFN(vkCreateRenderPass)(device, &render_pass_create_info, NULL,
-                                  &render_pass);
-    assert(res == VK_SUCCESS);
-
-    if (got_wl) {
-        VkWaylandSurfaceCreateInfoKHR wl_surf_create_info = {
-            .sType = VK_STRUCTURE_TYPE_XLIB_SURFACE_CREATE_INFO_KHR,
-            .display = wl_dpy,
-            .surface = wl_srf,
-            .flags = 0,
-            .pNext = NULL,
-        };
-
-        res = VFN(vkCreateWaylandSurfaceKHR)(instance, &wl_surf_create_info,
-                                             NULL, &surface);
-        assert(res == VK_SUCCESS);
-    } else {
-        VkXlibSurfaceCreateInfoKHR xlib_surf_create_info = {
-            .sType = VK_STRUCTURE_TYPE_XLIB_SURFACE_CREATE_INFO_KHR,
-            .dpy = dpy,
-            .window = wnd,
-            .flags = 0,
-            .pNext = NULL,
-        };
-
-        res = VFN(vkCreateXlibSurfaceKHR)(instance, &xlib_surf_create_info,
-                                          NULL, &surface);
-        assert(res == VK_SUCCESS);
-    }
-
     VkBool32 supported;
     res = VFN(vkGetPhysicalDeviceSurfaceSupportKHR)(phy_device, 0, surface,
                                                     &supported);
@@ -677,6 +565,131 @@ set_global_state()
                                                          &surf_caps);
     assert(res == VK_SUCCESS);
     /* TODO: check capabilities */
+}
+
+static void
+set_global_state()
+{
+    Display *dpy;
+    Window wnd;
+    struct wl_display *wl_dpy;
+    struct wl_surface *wl_srf;
+
+    switch (gears_options.winsys_type) {
+    case WINSYS_WAYLAND:
+        if (get_wl_dpy_srf(&wl_dpy, &wl_srf))
+            active_winsys = gears_options.winsys_type;
+        break;
+    case WINSYS_X11:
+        if (get_x11r6_dpy_wnd(&dpy, &wnd))
+            active_winsys = gears_options.winsys_type;
+        break;
+    case WINSYS_AUTO:
+    default:
+        if (get_x11r6_dpy_wnd(&dpy, &wnd))
+            active_winsys = WINSYS_X11;
+        else if (get_wl_dpy_srf(&wl_dpy, &wl_srf))
+            active_winsys = WINSYS_WAYLAND;
+        else
+            assert(false);
+    }
+
+    assert(gears_options.winsys_type == WINSYS_AUTO ||
+           gears_options.winsys_type == active_winsys);
+
+    VkResult res;
+    int i;
+
+    VkAttachmentDescription att_desc[] = {
+        {
+            .format = VK_FORMAT_B8G8R8A8_UNORM,
+            .samples = VK_SAMPLE_COUNT_1_BIT,
+            .loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
+            .storeOp = VK_ATTACHMENT_STORE_OP_STORE,
+            .initialLayout = VK_IMAGE_LAYOUT_UNDEFINED,
+            .finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
+        },
+        {
+            .format = VK_FORMAT_D16_UNORM,
+            .samples = VK_SAMPLE_COUNT_1_BIT,
+            .loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
+            .storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
+            .stencilLoadOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
+            .stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
+            .initialLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
+            .finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
+        },
+    };
+    VkAttachmentReference att_ref = {
+        .attachment = 0,
+        .layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL
+    };
+    VkAttachmentReference unused_att_ref = {
+        .attachment = VK_ATTACHMENT_UNUSED,
+        .layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL
+    };
+    VkAttachmentReference depth_att_ref = {
+        .attachment = 1,
+        .layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
+    };
+    uint32_t preserve_att[] = { 0 };
+    VkSubpassDescription subpass_desc = {
+        .pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS,
+        .inputAttachmentCount = 0,
+        .colorAttachmentCount = 1,
+        .pColorAttachments = &att_ref,
+        .pResolveAttachments = &unused_att_ref,
+        .pDepthStencilAttachment = &depth_att_ref,
+        .preserveAttachmentCount = 1,
+        .pPreserveAttachments = preserve_att,
+    };
+    VkRenderPassCreateInfo render_pass_create_info = {
+        .sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO,
+        .attachmentCount = 2,
+        .pAttachments = att_desc,
+        .subpassCount = 1,
+        .pSubpasses = &subpass_desc,
+        .dependencyCount = 0,
+    };
+    res = VFN(vkCreateRenderPass)(device, &render_pass_create_info, NULL,
+                                  &render_pass);
+    assert(res == VK_SUCCESS);
+
+    switch(active_winsys) {
+    case WINSYS_WAYLAND: {
+        VkWaylandSurfaceCreateInfoKHR wl_surf_create_info = {
+            .sType = VK_STRUCTURE_TYPE_XLIB_SURFACE_CREATE_INFO_KHR,
+            .display = wl_dpy,
+            .surface = wl_srf,
+            .flags = 0,
+            .pNext = NULL,
+        };
+
+        res = VFN(vkCreateWaylandSurfaceKHR)(instance, &wl_surf_create_info,
+                                             NULL, &surface);
+        assert(res == VK_SUCCESS);
+        init_with_surface();
+        break;
+    }
+    case WINSYS_X11: {
+        VkXlibSurfaceCreateInfoKHR xlib_surf_create_info = {
+            .sType = VK_STRUCTURE_TYPE_XLIB_SURFACE_CREATE_INFO_KHR,
+            .dpy = dpy,
+            .window = wnd,
+            .flags = 0,
+            .pNext = NULL,
+        };
+
+        res = VFN(vkCreateXlibSurfaceKHR)(instance, &xlib_surf_create_info,
+                                          NULL, &surface);
+        assert(res == VK_SUCCESS);
+        init_with_surface();
+        break;
+    }
+    default:
+        assert(false);
+        break;
+    }
 
     uint32_t total_vertex_count = 0;
     for (i = 0; i < GEARS; i++) {
