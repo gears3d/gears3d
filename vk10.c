@@ -1104,17 +1104,31 @@ create_non_wsi_images(int width, int height, VkImage *images)
         non_wsi_images[image_num] = images[image_num];
     }
 
-    VkMemoryRequirements mem_req;
-    VFN(vkGetImageMemoryRequirements)(device, images[0], &mem_req);
+    VkMemoryRequirements mem_req[NUM_IMAGES];
+    for (image_num = 0; image_num < NUM_IMAGES; image_num++) {
+        VFN(vkGetImageMemoryRequirements)(device, images[image_num],
+                                          &mem_req[image_num]);
+    }
 
-    uint32_t mem_ty_idx = ffs(mem_req.memoryTypeBits);
+    uint32_t mem_ty_idx = ffs(mem_req[0].memoryTypeBits);
     assert(mem_ty_idx != 0);
     mem_ty_idx--;
 
-    VkDeviceSize image_size = ALIGN(mem_req.size, mem_req.alignment);
+    for (image_num = 1; image_num < NUM_IMAGES; image_num++) {
+        assert(ffs(mem_req[image_num].memoryTypeBits) - 1 == mem_ty_idx);
+    }
+
+    VkDeviceSize image_size = 0;
+    uint32_t image_offsets[NUM_IMAGES];
+    for (image_num = 1; image_num < NUM_IMAGES; image_num++) {
+        image_offsets[image_num] = image_size;
+        image_size =
+            ALIGN(image_size, mem_req[image_num].alignment) +
+            mem_req[image_num].size;
+    }
     VkMemoryAllocateInfo alloc_info = {
         .sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
-        .allocationSize = image_size * NUM_IMAGES,
+        .allocationSize = image_size,
         .memoryTypeIndex = mem_ty_idx,
     };
 
@@ -1123,7 +1137,7 @@ create_non_wsi_images(int width, int height, VkImage *images)
 
     for (image_num = 0; image_num < NUM_IMAGES; image_num++) {
         res = VFN(vkBindImageMemory)(device, images[image_num], non_wsi_mem,
-                                     image_size * image_num);
+                                     image_offsets[image_num]);
         assert(res == VK_SUCCESS);
     }
 }
