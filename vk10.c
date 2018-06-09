@@ -757,6 +757,22 @@ set_global_state()
         ALIGN(sizeof(struct vs_uniform_data),
               dev_prop.limits.minUniformBufferOffsetAlignment);
     uniform_data_size = GEARS * gear_uniform_data_size;
+
+    VkBufferCreateInfo uniform_buf_alloc_info = {
+        .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+        .size = uniform_data_size,
+        .usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+    };
+    res = VFN(vkCreateBuffer)(device, &uniform_buf_alloc_info, NULL,
+                              &uniform_buf);
+    assert(res == VK_SUCCESS);
+
+    VFN(vkGetBufferMemoryRequirements)(device, uniform_buf, &mem_req);
+    mem_ty_idx = ffs(mem_req.memoryTypeBits);
+    assert(mem_ty_idx != 0);
+    mem_ty_idx--;
+    alloc_info.memoryTypeIndex = mem_ty_idx;
+
     alloc_info.allocationSize = uniform_data_size;
     res = VFN(vkAllocateMemory)(device, &alloc_info, NULL, &uniform_mem);
     assert(res == VK_SUCCESS);
@@ -771,15 +787,6 @@ set_global_state()
 
     VFN(vkUnmapMemory)(device, uniform_mem);
     uniform_map = NULL;
-
-    VkBufferCreateInfo uniform_buf_alloc_info = {
-        .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
-        .size = uniform_data_size,
-        .usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-    };
-    res = VFN(vkCreateBuffer)(device, &uniform_buf_alloc_info, NULL,
-                              &uniform_buf);
-    assert(res == VK_SUCCESS);
 
     res = VFN(vkBindBufferMemory)(device, uniform_buf, uniform_mem, 0);
     assert(res == VK_SUCCESS);
