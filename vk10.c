@@ -811,6 +811,13 @@ set_global_state()
         .sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
         .setLayoutCount = 1,
         .pSetLayouts = &set_layout,
+        .pushConstantRangeCount = 1,
+        .pPushConstantRanges =
+            &(VkPushConstantRange) {
+                .stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT,
+                .offset = 0,
+                .size = sizeof(gears[0].color),
+            },
     };
     res = VFN(vkCreatePipelineLayout)(device, &pipeline_layout_info, NULL,
                                       &pipeline_layout);
