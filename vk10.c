@@ -1536,7 +1536,7 @@ draw()
         VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
     VkSubmitInfo submit_info = {
         .sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
-        .waitSemaphoreCount = 1,
+        .waitSemaphoreCount = using_wsi ? 1 : 0,
         .pWaitSemaphores = &semaphore,
         .pWaitDstStageMask = &state_flags,
         .commandBufferCount = 1,
