@@ -643,7 +643,6 @@ set_global_state()
         .attachment = 1,
         .layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
     };
-    uint32_t preserve_att[] = { 0 };
     VkSubpassDescription subpass_desc = {
         .pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS,
         .inputAttachmentCount = 0,
@@ -651,8 +650,8 @@ set_global_state()
         .pColorAttachments = &att_ref,
         .pResolveAttachments = &unused_att_ref,
         .pDepthStencilAttachment = &depth_att_ref,
-        .preserveAttachmentCount = 1,
-        .pPreserveAttachments = preserve_att,
+        .preserveAttachmentCount = 0,
+        .pPreserveAttachments = NULL,
     };
     VkRenderPassCreateInfo render_pass_create_info = {
         .sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO,
