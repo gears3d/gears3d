@@ -668,7 +668,7 @@ set_global_state()
     switch(active_winsys) {
     case WINSYS_WAYLAND: {
         VkWaylandSurfaceCreateInfoKHR wl_surf_create_info = {
-            .sType = VK_STRUCTURE_TYPE_XLIB_SURFACE_CREATE_INFO_KHR,
+            .sType = VK_STRUCTURE_TYPE_WAYLAND_SURFACE_CREATE_INFO_KHR,
             .display = wl_dpy,
             .surface = wl_srf,
             .flags = 0,
