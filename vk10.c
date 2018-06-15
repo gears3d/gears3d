@@ -320,13 +320,17 @@ static void init_vk_instance()
         printf("Failed to create vulkan instance: %s\n", res_to_str(res));
     assert(res == VK_SUCCESS);
 
-#define GET_I_PROC(f) \
-    VFN(f) = (void*)VFN(vkGetInstanceProcAddr)(instance, #f);   \
-    assert(VFN(f) != NULL)
+    #define GET_I_PROC(f)                                               \
+    do {                                                                \
+        VFN(f) = (void*)VFN(vkGetInstanceProcAddr)(instance, #f);       \
+        assert(VFN(f) != NULL);                                         \
+    } while(0)
 
     GET_I_PROC(vkCreateDevice);
-    GET_I_PROC(vkCreateWaylandSurfaceKHR);
-    GET_I_PROC(vkCreateXlibSurfaceKHR);
+    if (wayland_wsi_supported)
+        GET_I_PROC(vkCreateWaylandSurfaceKHR);
+    if (xlib_wsi_supported)
+        GET_I_PROC(vkCreateXlibSurfaceKHR);
     GET_I_PROC(vkEnumeratePhysicalDevices);
     GET_I_PROC(vkGetPhysicalDeviceProperties);
     GET_I_PROC(vkGetPhysicalDeviceQueueFamilyProperties);
@@ -334,6 +338,7 @@ static void init_vk_instance()
     GET_I_PROC(vkGetPhysicalDeviceSurfaceFormatsKHR);
     GET_I_PROC(vkGetPhysicalDeviceSurfacePresentModesKHR);
     GET_I_PROC(vkGetPhysicalDeviceSurfaceSupportKHR);
+    #undef GET_I_PROC
 }
 
 static void
