@@ -697,18 +697,20 @@ set_global_state()
             active_winsys = WINSYS_NONE;
             break;
     case WINSYS_WAYLAND:
+        assert(wayland_wsi_supported);
         if (get_wl_dpy_srf(&wl_dpy, &wl_srf))
             active_winsys = gears_options.winsys_type;
         break;
     case WINSYS_X11:
+        assert(xlib_wsi_supported);
         if (get_x11r6_dpy_wnd(&dpy, &wnd))
             active_winsys = gears_options.winsys_type;
         break;
     case WINSYS_AUTO:
     default:
-        if (get_x11r6_dpy_wnd(&dpy, &wnd))
+        if (xlib_wsi_supported && get_x11r6_dpy_wnd(&dpy, &wnd))
             active_winsys = WINSYS_X11;
-        else if (get_wl_dpy_srf(&wl_dpy, &wl_srf))
+        else if (wayland_wsi_supported && get_wl_dpy_srf(&wl_dpy, &wl_srf))
             active_winsys = WINSYS_WAYLAND;
         else
             active_winsys = WINSYS_NONE;
