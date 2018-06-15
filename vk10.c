@@ -185,21 +185,6 @@ static const VkAllocationCallbacks alloc_callbacks = {
     .pfnInternalFree = vk_int_free_notif,
 };
 
-const char *enable_extensions[] = {
-    "VK_KHR_wayland_surface",
-    "VK_KHR_xlib_surface",
-    "VK_KHR_surface",
-};
-static const VkInstanceCreateInfo create_info = {
-    .sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
-    .pApplicationInfo = &(VkApplicationInfo) {
-        .pApplicationName = "gears3d",
-        .apiVersion = VK_MAKE_VERSION(1, 0, 0),
-    },
-    .ppEnabledExtensionNames = enable_extensions,
-    .enabledExtensionCount = 3,
-};
-
 static const float queue_priority = 1.0f;
 static const VkDeviceQueueCreateInfo dev_queue_create_info = {
     .sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
@@ -229,6 +214,8 @@ static bool mailbox_present_supported = false;
 static VkSemaphore semaphore;
 static VkFence fence;
 static bool using_wsi = false;
+static bool wayland_wsi_supported = false;
+static bool xlib_wsi_supported = false;
 static enum winsys_type active_winsys;
 
 static VkCommandBuffer cmd_buffers[NUM_IMAGES];
@@ -243,6 +230,75 @@ static VkPipeline pipeline;
 
 static unsigned int gear_uniform_data_size;
 static unsigned int uniform_data_size;
+
+static VkResult
+create_instance()
+{
+    VkResult res;
+
+    static const char *extensions[3] = {
+        "VK_KHR_surface",
+        "VK_KHR_wayland_surface",
+        "VK_KHR_xlib_surface",
+    };
+    static const char *x_extensions[2] = {
+        "VK_KHR_surface",
+        "VK_KHR_xlib_surface",
+    };
+    VkInstanceCreateInfo create_info = {
+        .sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
+        .pApplicationInfo = &(VkApplicationInfo) {
+            .pApplicationName = "gears3d",
+            .apiVersion = VK_MAKE_VERSION(1, 0, 0),
+        },
+        .ppEnabledExtensionNames = extensions,
+        .enabledExtensionCount = 3,
+    };
+
+    switch (gears_options.winsys_type) {
+    case WINSYS_NONE:
+        create_info.enabledExtensionCount = 1;
+        return VFN(vkCreateInstance)(&create_info, &alloc_callbacks, &instance);
+    case WINSYS_WAYLAND:
+        create_info.enabledExtensionCount = 2;
+        res = VFN(vkCreateInstance)(&create_info, &alloc_callbacks, &instance);
+        if (res == VK_SUCCESS)
+            wayland_wsi_supported = true;
+        return res;
+    case WINSYS_X11:
+        create_info.ppEnabledExtensionNames = x_extensions;
+        create_info.enabledExtensionCount = 2;
+        res = VFN(vkCreateInstance)(&create_info, &alloc_callbacks, &instance);
+        if (res == VK_SUCCESS)
+            xlib_wsi_supported = true;
+        return res;
+    case WINSYS_AUTO:
+        res = VFN(vkCreateInstance)(&create_info, &alloc_callbacks, &instance);
+        if (res == VK_SUCCESS) {
+            wayland_wsi_supported = true;
+            xlib_wsi_supported = true;
+            return res;
+        }
+        create_info.enabledExtensionCount = 2;
+        res = VFN(vkCreateInstance)(&create_info, &alloc_callbacks, &instance);
+        if (res == VK_SUCCESS) {
+            wayland_wsi_supported = true;
+            return res;
+        }
+        create_info.ppEnabledExtensionNames = x_extensions;
+        res = VFN(vkCreateInstance)(&create_info, &alloc_callbacks, &instance);
+        if (res == VK_SUCCESS) {
+            xlib_wsi_supported = true;
+            return res;
+        }
+        create_info.enabledExtensionCount = 1;
+        return VFN(vkCreateInstance)(&create_info, &alloc_callbacks, &instance);
+    default:
+        return VK_ERROR_FORMAT_NOT_SUPPORTED;
+    }
+
+    return res;
+}
 
 static void init_vk_instance()
 {
@@ -259,7 +315,7 @@ static void init_vk_instance()
     DLSYM(vkGetInstanceProcAddr);
     DLSYM(vkGetDeviceProcAddr);
 
-    res = VFN(vkCreateInstance)(&create_info, &alloc_callbacks, &instance);
+    res = create_instance();
     if (res != VK_SUCCESS)
         printf("Failed to create vulkan instance: %s\n", res_to_str(res));
     assert(res == VK_SUCCESS);
