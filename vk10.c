@@ -1,6 +1,7 @@
 /* Jordan Justen : gears3d is public domain */
 
 #include <math.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -259,6 +260,8 @@ static void init_vk_instance()
     DLSYM(vkGetDeviceProcAddr);
 
     res = VFN(vkCreateInstance)(&create_info, &alloc_callbacks, &instance);
+    if (res != VK_SUCCESS)
+        printf("Failed to create vulkan instance: %s\n", res_to_str(res));
     assert(res == VK_SUCCESS);
 
 #define GET_I_PROC(f) \
