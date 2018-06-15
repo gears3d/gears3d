@@ -307,13 +307,16 @@ static void init_vk_instance()
     if (lib == NULL)
         abort();
 
-#define DLSYM(f) \
-    VFN(f) = get_library_symbol(lib, #f); \
-    assert(VFN(f) != NULL)
+    #define DLSYM(f)                          \
+    do {                                      \
+        VFN(f) = get_library_symbol(lib, #f); \
+        assert(VFN(f) != NULL);               \
+    } while(0)
 
     DLSYM(vkCreateInstance);
     DLSYM(vkGetInstanceProcAddr);
     DLSYM(vkGetDeviceProcAddr);
+    #undef DLSYM
 
     res = create_instance();
     if (res != VK_SUCCESS)
