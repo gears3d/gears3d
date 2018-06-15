@@ -1240,11 +1240,11 @@ create_non_wsi_images(int width, int height, VkImage *images)
 
     VkDeviceSize image_size = 0;
     uint32_t image_offsets[NUM_IMAGES];
+    image_offsets[0] = 0;
     for (image_num = 1; image_num < NUM_IMAGES; image_num++) {
+        image_size = ALIGN(image_size, mem_req[image_num].alignment);
         image_offsets[image_num] = image_size;
-        image_size =
-            ALIGN(image_size, mem_req[image_num].alignment) +
-            mem_req[image_num].size;
+        image_size += mem_req[image_num].size;
     }
     VkMemoryAllocateInfo alloc_info = {
         .sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
