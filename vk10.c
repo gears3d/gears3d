@@ -212,7 +212,7 @@ static VkSurfaceKHR surface;
 static bool immediate_present_supported = false;
 static bool mailbox_present_supported = false;
 static VkSemaphore semaphore;
-static VkFence fence;
+static VkFence fences[NUM_IMAGES];
 static bool using_wsi = false;
 static bool wayland_wsi_supported = false;
 static bool xlib_wsi_supported = false;
@@ -490,8 +490,10 @@ set_window_attributes()
     VkFenceCreateInfo fence_create_info = {
         .sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO
     };
-    res = VFN(vkCreateFence)(device, &fence_create_info, NULL, &fence);
-    assert(res == VK_SUCCESS);
+    for (int i = 0; i < NUM_IMAGES; i++) {
+        res = VFN(vkCreateFence)(device, &fence_create_info, NULL, &fences[i]);
+        assert(res == VK_SUCCESS);
+    }
 }
 
 struct gear_info {
@@ -1669,11 +1671,11 @@ draw()
         .commandBufferCount = 1,
         .pCommandBuffers = &cmd_buffers[index],
     };
-    res = VFN(vkQueueSubmit)(queue, 1, &submit_info, fence);
+    res = VFN(vkQueueSubmit)(queue, 1, &submit_info, fences[index]);
     assert(res == VK_SUCCESS);
 
-    res = VFN(vkWaitForFences)(device, 1, &fence, true, INT64_MAX);
-    VFN(vkResetFences)(device, 1, &fence);
+    res = VFN(vkWaitForFences)(device, 1, &fences[index], true, INT64_MAX);
+    VFN(vkResetFences)(device, 1, &fences[index]);
 
     if (using_wsi)
         wsi_present(index);
