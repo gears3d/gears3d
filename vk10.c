@@ -231,6 +231,8 @@ static VkPipeline pipeline;
 static unsigned int gear_uniform_data_size;
 static unsigned int uniform_data_size;
 
+static bool update_angle_uniform = true;
+
 static VkResult
 create_instance()
 {
@@ -1511,15 +1513,26 @@ create_pipeline(int width, int height)
 static void
 update_angle(float angle)
 {
+    static float last_angle = 0.0f;
+
+    if (!update_angle_uniform && last_angle == angle)
+        return;
+
     int i;
     for (i = 0; i < GEARS; i++) {
         gears[i].angle = angle * gears[i].angle_rate + gears[i].angle_adjust;
     }
+
+    update_angle_uniform = true;
+    last_angle = angle;
 }
 
 static void
 update_uniform_gear_angles()
 {
+    if (!update_angle_uniform)
+        return;
+
     VkResult res;
     struct vs_uniform_data *uniform_map;
     res = VFN(vkMapMemory)(device, uniform_mem, 0,
@@ -1536,6 +1549,7 @@ update_uniform_gear_angles()
 
     VFN(vkUnmapMemory)(device, uniform_mem);
     uniform_map = NULL;
+    update_angle_uniform = false;
 }
 
 static void
