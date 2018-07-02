@@ -223,12 +223,13 @@ static VkDeviceMemory vert_mem;
 static VkBuffer vert_buf;
 static VkDeviceMemory uniform_mem;
 static VkBuffer uniform_buf;
-static VkDescriptorSet descriptor_sets[GEARS];
+static VkDescriptorSet descriptor_sets[NUM_IMAGES * GEARS];
 static VkRenderPass render_pass;
 static VkPipelineLayout pipeline_layout;
 static VkPipeline pipeline;
 
 static unsigned int gear_uniform_data_size;
+static unsigned int img_uniform_data_size;
 static unsigned int uniform_data_size;
 
 static bool update_angle_uniform = true;
@@ -556,9 +557,9 @@ rotate_gears(float x, float y, float z)
 }
 
 static struct vs_uniform_data*
-gear_uniform_data(void *uniform_map, unsigned int gear)
+gear_uniform_data(void *uniform_map, unsigned int img, unsigned int gear)
 {
-    return uniform_map + gear * gear_uniform_data_size;
+    return uniform_map + (GEARS * img + gear) * gear_uniform_data_size;
 }
 
 static void
@@ -569,10 +570,12 @@ set_gear_const_uniform_data(void *uniform_map)
 
     rotate_gears(20.0 / 180.0 * M_PI, 30.0 / 180.0 * M_PI, 0.0);
 
-    for (gear = 0; gear < GEARS; gear++) {
-        gear_u_data = gear_uniform_data(uniform_map, gear);
-        memcpy(gear_u_data->model, gears[gear].model,
-               sizeof(gears[gear].model));
+    for (unsigned int img = 0; img < NUM_IMAGES; img++) {
+        for (gear = 0; gear < GEARS; gear++) {
+            gear_u_data = gear_uniform_data(uniform_map, img, gear);
+            memcpy(gear_u_data->model, gears[gear].model,
+                   sizeof(gears[gear].model));
+        }
     }
 }
 
@@ -588,11 +591,13 @@ set_view_projection(int width, int height, void *uniform_map)
 
     frustum(projection, -1.0, 1.0, h, -h, 5.0, 200.0);
 
-    for (gear = 0; gear < GEARS; gear++) {
-        gear_u_data = gear_uniform_data(uniform_map, gear);
-        memcpy(gear_u_data->view, view, sizeof(view));
-        memcpy(gear_u_data->projection, projection, sizeof(projection));
-        gear_u_data->tooth_angle = M_PI / (gears[gear].teeth / 2.0);
+    for (unsigned int img = 0; img < NUM_IMAGES; img++) {
+        for (gear = 0; gear < GEARS; gear++) {
+            gear_u_data = gear_uniform_data(uniform_map, img, gear);
+            memcpy(gear_u_data->view, view, sizeof(view));
+            memcpy(gear_u_data->projection, projection, sizeof(projection));
+            gear_u_data->tooth_angle = M_PI / (gears[gear].teeth / 2.0);
+        }
     }
 }
 
@@ -873,7 +878,8 @@ set_global_state()
     gear_uniform_data_size =
         ALIGN(sizeof(struct vs_uniform_data),
               dev_prop.limits.minUniformBufferOffsetAlignment);
-    uniform_data_size = GEARS * gear_uniform_data_size;
+    img_uniform_data_size = GEARS * gear_uniform_data_size;
+    uniform_data_size = NUM_IMAGES * img_uniform_data_size;
 
     VkBufferCreateInfo uniform_buf_alloc_info = {
         .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
@@ -942,13 +948,13 @@ set_global_state()
 
     VkDescriptorPoolSize pool_size = {
         .type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-        .descriptorCount = GEARS,
+        .descriptorCount = NUM_IMAGES * GEARS,
     };
     VkDescriptorPoolCreateInfo desc_pool_create_info = {
         .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
         .pNext = NULL,
         .flags = 0,
-        .maxSets = GEARS,
+        .maxSets = NUM_IMAGES * GEARS,
         .poolSizeCount = 1,
         .pPoolSizes = &pool_size,
     };
@@ -957,30 +963,32 @@ set_global_state()
                                       &desc_pool);
     assert(res == VK_SUCCESS);
 
+    int desc_num;
+    VkDescriptorSetLayout set_layouts[NUM_IMAGES * GEARS];
+    for (desc_num = 0; desc_num < NUM_IMAGES * GEARS; desc_num++) {
+        set_layouts[desc_num] = set_layout;
+    }
     VkDescriptorSetAllocateInfo desc_set_alloc_info = {
         .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
         .descriptorPool = desc_pool,
-        .descriptorSetCount = 1,
-        .pSetLayouts = &set_layout,
+        .descriptorSetCount = NUM_IMAGES * GEARS,
+        .pSetLayouts = set_layouts,
     };
-    int gear_num;
-    for (gear_num = 0; gear_num < GEARS; gear_num++) {
-        res = VFN(vkAllocateDescriptorSets)(device, &desc_set_alloc_info,
-                                            &descriptor_sets[gear_num]);
-        assert(res == VK_SUCCESS);
-    }
+    res = VFN(vkAllocateDescriptorSets)(device, &desc_set_alloc_info,
+                                        &descriptor_sets[0]);
+    assert(res == VK_SUCCESS);
 
     VkDescriptorBufferInfo desc_buf_info_tmpl = {
         .buffer = uniform_buf,
         .offset = 0,
         .range = sizeof(struct vs_uniform_data),
     };
-    VkDescriptorBufferInfo desc_buf_infos[GEARS];
-    for (gear_num = 0; gear_num < GEARS; gear_num++) {
-        memcpy(&desc_buf_infos[gear_num], &desc_buf_info_tmpl,
+    VkDescriptorBufferInfo desc_buf_infos[NUM_IMAGES * GEARS];
+    for (desc_num = 0; desc_num < NUM_IMAGES * GEARS; desc_num++) {
+        memcpy(&desc_buf_infos[desc_num], &desc_buf_info_tmpl,
                sizeof(VkDescriptorBufferInfo));
-        desc_buf_infos[gear_num].offset =
-            gear_num * gear_uniform_data_size;
+        desc_buf_infos[desc_num].offset =
+            desc_num * gear_uniform_data_size;
     }
 
     VkWriteDescriptorSet desc_write_tmpl = {
@@ -993,14 +1001,15 @@ set_global_state()
         .pBufferInfo = &(VkDescriptorBufferInfo) {
         }
     };
-    VkWriteDescriptorSet desc_write_sets[GEARS];
-    for (gear_num = 0; gear_num < GEARS; gear_num++) {
-        memcpy(&desc_write_sets[gear_num], &desc_write_tmpl,
+    VkWriteDescriptorSet desc_write_sets[NUM_IMAGES * GEARS];
+    for (desc_num = 0; desc_num < NUM_IMAGES * GEARS; desc_num++) {
+        memcpy(&desc_write_sets[desc_num], &desc_write_tmpl,
                sizeof(VkWriteDescriptorSet));
-        desc_write_sets[gear_num].dstSet = descriptor_sets[gear_num];
-        desc_write_sets[gear_num].pBufferInfo = &desc_buf_infos[gear_num];
+        desc_write_sets[desc_num].dstSet = descriptor_sets[desc_num];
+        desc_write_sets[desc_num].pBufferInfo = &desc_buf_infos[desc_num];
     }
-    VFN(vkUpdateDescriptorSets)(device, GEARS, desc_write_sets, 0, NULL);
+    VFN(vkUpdateDescriptorSets)(device, NUM_IMAGES * GEARS, desc_write_sets, 0,
+                                NULL);
 
     VkShaderModule vert_module;
     VkShaderModuleCreateInfo module_create_info = {
@@ -1530,7 +1539,7 @@ update_angle(float angle)
 }
 
 static void
-update_uniform_gear_angles()
+update_uniform_gear_angles(unsigned int img)
 {
     if (!update_angle_uniform)
         return;
@@ -1545,7 +1554,7 @@ update_uniform_gear_angles()
     struct vs_uniform_data *gear_u_data;
     unsigned int i;
     for (i = 0; i < GEARS; i++) {
-        gear_u_data = gear_uniform_data(uniform_map, i);
+        gear_u_data = gear_uniform_data(uniform_map, img, i);
         gear_u_data->gear_angle = gears[i].angle;
     }
 
@@ -1650,8 +1659,6 @@ draw()
     VkResult res;
     int32_t index;
 
-    update_uniform_gear_angles();
-
     pthread_mutex_lock(&win_size_lock);
 
     index = using_wsi ? get_wsi_image() : get_non_wsi_image();
@@ -1660,6 +1667,8 @@ draw()
         pthread_mutex_unlock(&win_size_lock);
         return;
     }
+
+    update_uniform_gear_angles(index);
 
     VkPipelineStageFlags state_flags =
         VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
