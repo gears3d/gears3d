@@ -89,6 +89,7 @@ DECL_PVKFN(vkDestroyBuffer);
 DECL_PVKFN(vkDestroyImage);
 DECL_PVKFN(vkDestroySwapchainKHR);
 DECL_PVKFN(vkEndCommandBuffer);
+DECL_PVKFN(vkFlushMappedMemoryRanges);
 DECL_PVKFN(vkFreeMemory);
 DECL_PVKFN(vkGetBufferMemoryRequirements);
 DECL_PVKFN(vkGetDeviceQueue);
@@ -223,6 +224,7 @@ static VkDeviceMemory vert_mem;
 static VkBuffer vert_buf;
 static VkDeviceMemory uniform_mem;
 static VkBuffer uniform_buf;
+struct vs_uniform_data *uniform_map;
 static VkDescriptorSet descriptor_sets[NUM_IMAGES * GEARS];
 static VkRenderPass render_pass;
 static VkPipelineLayout pipeline_layout;
@@ -451,6 +453,7 @@ init_vk_device()
     GET_D_PROC(vkDestroyImage);
     GET_D_PROC(vkDestroySwapchainKHR);
     GET_D_PROC(vkEndCommandBuffer);
+    GET_D_PROC(vkFlushMappedMemoryRanges);
     GET_D_PROC(vkFreeMemory);
     GET_D_PROC(vkGetBufferMemoryRequirements);
     GET_D_PROC(vkGetDeviceQueue);
@@ -607,16 +610,17 @@ create_pipeline(int width, int height);
 static void
 reshape(int width, int height)
 {
-    VkResult res;
-    struct vs_uniform_data *uniform_map;
-
-    res = VFN(vkMapMemory)(device, uniform_mem, 0, uniform_data_size, 0,
-                           (void**)&uniform_map);
-    assert(res == VK_SUCCESS);
-
     set_view_projection(width, height, uniform_map);
 
-    VFN(vkUnmapMemory)(device, uniform_mem);
+    VkMappedMemoryRange mem_range = {
+        .sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE,
+        .pNext = NULL,
+        .memory = uniform_mem,
+        .offset = 0,
+        .size = uniform_data_size,
+    };
+    VkResult res = VFN(vkFlushMappedMemoryRanges)(device, 1, &mem_range);
+    assert(res == VK_SUCCESS);
 
     create_pipeline(width, height);
 }
@@ -900,7 +904,6 @@ set_global_state()
     res = VFN(vkAllocateMemory)(device, &alloc_info, NULL, &uniform_mem);
     assert(res == VK_SUCCESS);
 
-    struct vs_uniform_data *uniform_map;
     res = VFN(vkMapMemory)(device, uniform_mem, 0, uniform_data_size, 0,
                            (void**)&uniform_map);
     assert(res == VK_SUCCESS);
@@ -908,8 +911,15 @@ set_global_state()
     memset(uniform_map, 0, uniform_data_size);
     set_gear_const_uniform_data(uniform_map);
 
-    VFN(vkUnmapMemory)(device, uniform_mem);
-    uniform_map = NULL;
+    VkMappedMemoryRange mem_range = {
+        .sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE,
+        .pNext = NULL,
+        .memory = uniform_mem,
+        .offset = 0,
+        .size = uniform_data_size,
+    };
+    res = VFN(vkFlushMappedMemoryRanges)(device, 1, &mem_range);
+    assert(res == VK_SUCCESS);
 
     res = VFN(vkBindBufferMemory)(device, uniform_buf, uniform_mem, 0);
     assert(res == VK_SUCCESS);
@@ -1544,13 +1554,6 @@ update_uniform_gear_angles(unsigned int img)
     if (!update_angle_uniform)
         return;
 
-    VkResult res;
-    struct vs_uniform_data *uniform_map;
-    res = VFN(vkMapMemory)(device, uniform_mem, 0,
-                           GEARS * gear_uniform_data_size, 0,
-                           (void**)&uniform_map);
-    assert(res == VK_SUCCESS);
-
     struct vs_uniform_data *gear_u_data;
     unsigned int i;
     for (i = 0; i < GEARS; i++) {
@@ -1558,8 +1561,15 @@ update_uniform_gear_angles(unsigned int img)
         gear_u_data->gear_angle = gears[i].angle;
     }
 
-    VFN(vkUnmapMemory)(device, uniform_mem);
-    uniform_map = NULL;
+    VkMappedMemoryRange mem_range = {
+        .sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE,
+        .pNext = NULL,
+        .memory = uniform_mem,
+        .offset = img * img_uniform_data_size,
+        .size = img_uniform_data_size,
+    };
+    VkResult res = VFN(vkFlushMappedMemoryRanges)(device, 1, &mem_range);
+    assert(res == VK_SUCCESS);
     update_angle_uniform = false;
 }
 
