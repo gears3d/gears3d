@@ -93,6 +93,7 @@ DECL_PVKFN(vkFlushMappedMemoryRanges);
 DECL_PVKFN(vkFreeMemory);
 DECL_PVKFN(vkGetBufferMemoryRequirements);
 DECL_PVKFN(vkGetDeviceQueue);
+DECL_PVKFN(vkGetFenceStatus);
 DECL_PVKFN(vkGetImageMemoryRequirements);
 DECL_PVKFN(vkGetSwapchainImagesKHR);
 DECL_PVKFN(vkMapMemory);
@@ -235,6 +236,10 @@ static unsigned int img_uniform_data_size;
 static unsigned int uniform_data_size;
 
 static bool update_angle_uniform = true;
+
+static int32_t in_flight_indices[NUM_IMAGES];
+static unsigned int submitted_render_count = 0;
+static int next_render_pos = 0;
 
 static VkResult
 create_instance()
@@ -457,6 +462,7 @@ init_vk_device()
     GET_D_PROC(vkFreeMemory);
     GET_D_PROC(vkGetBufferMemoryRequirements);
     GET_D_PROC(vkGetDeviceQueue);
+    GET_D_PROC(vkGetFenceStatus);
     GET_D_PROC(vkGetImageMemoryRequirements);
     GET_D_PROC(vkGetSwapchainImagesKHR);
     GET_D_PROC(vkMapMemory);
@@ -1663,6 +1669,62 @@ get_non_wsi_image()
     return ret_index;
 }
 
+static int
+submitted_pos()
+{
+    return
+        (next_render_pos + NUM_IMAGES - submitted_render_count) % NUM_IMAGES;
+}
+
+static void
+flush_one_render()
+{
+    assert(submitted_render_count > 0);
+    int index = in_flight_indices[submitted_pos()];
+    VkResult res =
+        VFN(vkWaitForFences)(device, 1, &fences[index], true, INT64_MAX);
+    assert(res == VK_SUCCESS);
+
+    VFN(vkResetFences)(device, 1, &fences[index]);
+
+    if (using_wsi)
+        wsi_present(index);
+
+    post_draw();
+
+    submitted_render_count--;
+}
+
+static void
+check_for_complete_frames()
+{
+    int pos = submitted_pos();
+    while (submitted_render_count > 0) {
+        int index = in_flight_indices[pos];
+        VkResult res = VFN(vkGetFenceStatus)(device, fences[index]);
+        if (res == VK_NOT_READY)
+            return;
+
+        VFN(vkResetFences)(device, 1, &fences[index]);
+
+        if (using_wsi)
+            wsi_present(index);
+
+        post_draw();
+
+        submitted_render_count--;
+        pos = (pos + 1) % NUM_IMAGES;
+    }
+}
+
+static void
+flush_all_renders()
+{
+    check_for_complete_frames();
+    while (submitted_render_count > 0)
+        flush_one_render();
+}
+
 static void
 draw()
 {
@@ -1670,6 +1732,12 @@ draw()
     int32_t index;
 
     pthread_mutex_lock(&win_size_lock);
+
+    if (submitted_render_count == NUM_IMAGES)
+        flush_one_render();
+
+    if (submitted_render_count > 0)
+        check_for_complete_frames();
 
     index = using_wsi ? get_wsi_image() : get_non_wsi_image();
 
@@ -1693,13 +1761,9 @@ draw()
     res = VFN(vkQueueSubmit)(queue, 1, &submit_info, fences[index]);
     assert(res == VK_SUCCESS);
 
-    res = VFN(vkWaitForFences)(device, 1, &fences[index], true, INT64_MAX);
-    VFN(vkResetFences)(device, 1, &fences[index]);
-
-    if (using_wsi)
-        wsi_present(index);
-
-    post_draw();
+    submitted_render_count++;
+    in_flight_indices[next_render_pos] = index;
+    next_render_pos = (next_render_pos + 1) % NUM_IMAGES;
 
     pthread_mutex_unlock(&win_size_lock);
 }
@@ -1707,6 +1771,9 @@ draw()
 static void
 destruct()
 {
+    pthread_mutex_lock(&win_size_lock);
+    flush_all_renders();
+    pthread_mutex_unlock(&win_size_lock);
 }
 
 struct gears_drawer vk10_drawer = {
