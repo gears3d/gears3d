@@ -743,14 +743,20 @@ set_global_state()
     VkResult res;
     int i;
 
+    VkImageLayout initialColorLayout =
+        using_wsi ? VK_IMAGE_LAYOUT_UNDEFINED :
+                    VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+    VkImageLayout finalColorLayout =
+        using_wsi ? VK_IMAGE_LAYOUT_PRESENT_SRC_KHR :
+                    VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
     VkAttachmentDescription att_desc[] = {
         {
             .format = VK_FORMAT_B8G8R8A8_UNORM,
             .samples = VK_SAMPLE_COUNT_1_BIT,
             .loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
             .storeOp = VK_ATTACHMENT_STORE_OP_STORE,
-            .initialLayout = VK_IMAGE_LAYOUT_UNDEFINED,
-            .finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
+            .initialLayout = initialColorLayout,
+            .finalLayout = finalColorLayout,
         },
         {
             .format = VK_FORMAT_D16_UNORM,
