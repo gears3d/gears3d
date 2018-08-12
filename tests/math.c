@@ -27,22 +27,11 @@ static bool test_frustum()
     bool result = true;
     float f[16];
     frustum(f, -1.0, 1.0, 300, -300, 5.0, 200.0);
-    CHECK_FLOAT(f[0], 5.0f);
-    CHECK_FLOAT(f[1], 0.0f);
-    CHECK_FLOAT(f[2], 0.0f);
-    CHECK_FLOAT(f[3], 0.0f);
-    CHECK_FLOAT(f[4], 0.0f);
-    CHECK_FLOAT(f[5], -0.01667f);
-    CHECK_FLOAT(f[6], 0.0f);
-    CHECK_FLOAT(f[7], 0.0f);
-    CHECK_FLOAT(f[8], 0.0f);
-    CHECK_FLOAT(f[9], -0.0f);
-    CHECK_FLOAT(f[10], -1.051282f);
-    CHECK_FLOAT(f[11], -1.0f);
-    CHECK_FLOAT(f[12], 0.0f);
-    CHECK_FLOAT(f[13], 0.0f);
-    CHECK_FLOAT(f[14], -10.256411f);
-    CHECK_FLOAT(f[15], 0.0f);
+    float e[] = { 5.0f, 0.0f, 0.0f, 0.0f, 0.0f, -0.01667f, 0.0f, 0.0f, 0.0f,
+                  -0.0f, -1.051282f, -1.0f, 0.0f, 0.0f, -10.256411f, 0.0f };
+    for (int i = 0; i < 16; i++) {
+        CHECK_FLOAT(f[i], e[i]);
+    }
     return result;
 }
 
@@ -55,22 +44,13 @@ static bool test_mult_m4m4()
     float m2[] = { 5.3f, 0.3f, -1.4f, 5.6f, 3.3f, -2.4f, 7.1f, -2.9f,
                    -6.4f, 2.3f, 8.6f, -4.4f, 6.6f, 3.7f, 1.6f, -9.6f };
     mult_m4m4(d, m1, m2);
-    CHECK_FLOAT(d[0], 4.58f);
-    CHECK_FLOAT(d[1], -22.889999f);
-    CHECK_FLOAT(d[2], 18.999998f);
-    CHECK_FLOAT(d[3], 15.910001f);
-    CHECK_FLOAT(d[4], 26.129997f);
-    CHECK_FLOAT(d[5], 42.259998f);
-    CHECK_FLOAT(d[6], -38.699997f);
-    CHECK_FLOAT(d[7], -64.940002f);
-    CHECK_FLOAT(d[8], 26.409998f);
-    CHECK_FLOAT(d[9], 73.960007f);
-    CHECK_FLOAT(d[10], -91.300003f);
-    CHECK_FLOAT(d[11], -66.340012f);
-    CHECK_FLOAT(d[12], -11.750001f);
-    CHECK_FLOAT(d[13], 39.0f);
-    CHECK_FLOAT(d[14], -84.720001f);
-    CHECK_FLOAT(d[15], 48.48f);
+    float e[] = { 4.58f, -22.889999f, 18.999998f, 15.910001f,
+                  26.129997f, 42.259998f, -38.699997f, -64.940002f,
+                  26.409998f, 73.960007f, -91.300003f, -66.340012f,
+                  -11.750001f, 39.0f, -84.720001f, 48.48f };
+    for (int i = 0; i < 16; i++) {
+        CHECK_FLOAT(d[i], e[i]);
+    }
     return result;
 }
 
