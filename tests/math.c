@@ -46,9 +46,38 @@ static bool test_frustum()
     return result;
 }
 
+static bool test_mult_m4m4()
+{
+    bool result = true;
+    float d[16];
+    float m1[] = { 0.1f, -0.5f, -1.0f, 2.5f, -0.5f, 3.0f, -10.f, 7.0f,
+                   4.2f, 6.3f, -7.1f, -8.8f, 1.8f, -2.2f, 3.1f, -2.1f };
+    float m2[] = { 5.3f, 0.3f, -1.4f, 5.6f, 3.3f, -2.4f, 7.1f, -2.9f,
+                   -6.4f, 2.3f, 8.6f, -4.4f, 6.6f, 3.7f, 1.6f, -9.6f };
+    mult_m4m4(d, m1, m2);
+    CHECK_FLOAT(d[0], 4.58f);
+    CHECK_FLOAT(d[1], -22.889999f);
+    CHECK_FLOAT(d[2], 18.999998f);
+    CHECK_FLOAT(d[3], 15.910001f);
+    CHECK_FLOAT(d[4], 26.129997f);
+    CHECK_FLOAT(d[5], 42.259998f);
+    CHECK_FLOAT(d[6], -38.699997f);
+    CHECK_FLOAT(d[7], -64.940002f);
+    CHECK_FLOAT(d[8], 26.409998f);
+    CHECK_FLOAT(d[9], 73.960007f);
+    CHECK_FLOAT(d[10], -91.300003f);
+    CHECK_FLOAT(d[11], -66.340012f);
+    CHECK_FLOAT(d[12], -11.750001f);
+    CHECK_FLOAT(d[13], 39.0f);
+    CHECK_FLOAT(d[14], -84.720001f);
+    CHECK_FLOAT(d[15], 48.48f);
+    return result;
+}
+
 int main(int argc, char **argv)
 {
     bool result = true;
     CHECK_BOOL(test_frustum());
+    CHECK_BOOL(test_mult_m4m4());
     return result ? 0 : 1;
 }
