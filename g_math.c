@@ -5,11 +5,11 @@
 #include <assert.h>
 #include <string.h>
 
-static inline float*
-mat4_el(float *mat4, int row, int column)
+static inline int
+mat4_idx(int row, int column)
 {
     /* column major */
-    return mat4 + (row + (column << 2));
+    return row + (column << 2);
 }
 
 void
@@ -20,11 +20,11 @@ mult_m4m4(float *dest, float *src1, float *src2)
 
     for (i = 0; i < 4; i++) {
         for (j = 0; j < 4; j++) {
-            *mat4_el(mat4, i, j) =
-                *mat4_el(src1, i, 0) * *mat4_el(src2, 0, j) +
-                *mat4_el(src1, i, 1) * *mat4_el(src2, 1, j) +
-                *mat4_el(src1, i, 2) * *mat4_el(src2, 2, j) +
-                *mat4_el(src1, i, 3) * *mat4_el(src2, 3, j);
+            mat4[mat4_idx(i, j)] =
+                src1[mat4_idx(i, 0)] * src2[mat4_idx(0, j)] +
+                src1[mat4_idx(i, 1)] * src2[mat4_idx(1, j)] +
+                src1[mat4_idx(i, 2)] * src2[mat4_idx(2, j)] +
+                src1[mat4_idx(i, 3)] * src2[mat4_idx(3, j)];
         }
     }
 
@@ -92,13 +92,13 @@ frustum(float *mat4, double left, double right, double bottom, double top,
     double C = - (farVal + nearVal) / (farVal - nearVal);
     double D = - (2.0 * farVal * nearVal) / (farVal - nearVal);
     memset(mat4, 0, sizeof(*mat4) * 4 * 4);
-    *mat4_el(mat4, 0, 0) = (2.0 * nearVal) / (right - left);
-    *mat4_el(mat4, 0, 2) = A;
-    *mat4_el(mat4, 1, 1) = (2.0 * nearVal) / (top - bottom);
-    *mat4_el(mat4, 1, 2) = B;
-    *mat4_el(mat4, 2, 2) = C;
-    *mat4_el(mat4, 2, 3) = D;
-    *mat4_el(mat4, 3, 2) = -1.0;
+    mat4[mat4_idx(0, 0)] = (2.0 * nearVal) / (right - left);
+    mat4[mat4_idx(0, 2)] = A;
+    mat4[mat4_idx(1, 1)] = (2.0 * nearVal) / (top - bottom);
+    mat4[mat4_idx(1, 2)] = B;
+    mat4[mat4_idx(2, 2)] = C;
+    mat4[mat4_idx(2, 3)] = D;
+    mat4[mat4_idx(3, 2)] = -1.0;
 }
 
 void
@@ -127,11 +127,11 @@ perspective(float *mat4, double fovy, double aspect, double zNear, double zFar)
     double f = 1.0 / tan(fovy / 2.0);
     memset(mat4, 0, sizeof(*mat4) * 4 * 4);
     assert(aspect != 0.0 && zNear != zFar);
-    *mat4_el(mat4, 0, 0) = f / aspect;
-    *mat4_el(mat4, 1, 1) = f;
-    *mat4_el(mat4, 2, 2) = (zFar + zNear) / (zNear - zFar);
-    *mat4_el(mat4, 2, 3) = (2.0 * zFar * zNear) / (zNear - zFar);
-    *mat4_el(mat4, 3, 2) = -1.0;
+    mat4[mat4_idx(0, 0)] = f / aspect;
+    mat4[mat4_idx(1, 1)] = f;
+    mat4[mat4_idx(2, 2)] = (zFar + zNear) / (zNear - zFar);
+    mat4[mat4_idx(2, 3)] = (2.0 * zFar * zNear) / (zNear - zFar);
+    mat4[mat4_idx(3, 2)] = -1.0;
 }
 
 void
@@ -158,16 +158,16 @@ rotate(float *mat4, double angle, double x, double y, double z)
     double omc = 1.0 - c;
     double s = sin(angle);
     memset(mat4, 0, sizeof(*mat4) * 4 * 4);
-    *mat4_el(mat4, 0, 0) = (x * x * omc) + c;
-    *mat4_el(mat4, 0, 1) = (x * y * omc) - z * s;
-    *mat4_el(mat4, 0, 2) = (x * z * omc) + y * s;
-    *mat4_el(mat4, 1, 0) = (y * x * omc) + z * s;
-    *mat4_el(mat4, 1, 1) = (y * y * omc) + c;
-    *mat4_el(mat4, 1, 2) = (y * z * omc) - x * s;
-    *mat4_el(mat4, 2, 0) = (z * x * omc) - y * s;
-    *mat4_el(mat4, 2, 1) = (z * y * omc) + x * s;
-    *mat4_el(mat4, 2, 2) = (z * z * omc) + c;
-    *mat4_el(mat4, 3, 3) = 1.0;
+    mat4[mat4_idx(0, 0)] = (x * x * omc) + c;
+    mat4[mat4_idx(0, 1)] = (x * y * omc) - z * s;
+    mat4[mat4_idx(0, 2)] = (x * z * omc) + y * s;
+    mat4[mat4_idx(1, 0)] = (y * x * omc) + z * s;
+    mat4[mat4_idx(1, 1)] = (y * y * omc) + c;
+    mat4[mat4_idx(1, 2)] = (y * z * omc) - x * s;
+    mat4[mat4_idx(2, 0)] = (z * x * omc) - y * s;
+    mat4[mat4_idx(2, 1)] = (z * y * omc) + x * s;
+    mat4[mat4_idx(2, 2)] = (z * z * omc) + c;
+    mat4[mat4_idx(3, 3)] = 1.0;
 }
 
 void
@@ -187,11 +187,11 @@ translate(float *mat4, float x, float y, float z)
      *
      */
     memset(mat4, 0, sizeof(*mat4) * 4 * 4);
-    *mat4_el(mat4, 0, 0) = 1.0;
-    *mat4_el(mat4, 1, 1) = 1.0;
-    *mat4_el(mat4, 2, 2) = 1.0;
-    *mat4_el(mat4, 3, 3) = 1.0;
-    *mat4_el(mat4, 0, 3) = x;
-    *mat4_el(mat4, 1, 3) = y;
-    *mat4_el(mat4, 2, 3) = z;
+    mat4[mat4_idx(0, 0)] = 1.0;
+    mat4[mat4_idx(1, 1)] = 1.0;
+    mat4[mat4_idx(2, 2)] = 1.0;
+    mat4[mat4_idx(3, 3)] = 1.0;
+    mat4[mat4_idx(0, 3)] = x;
+    mat4[mat4_idx(1, 3)] = y;
+    mat4[mat4_idx(2, 3)] = z;
 }
