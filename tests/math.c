@@ -54,10 +54,24 @@ static bool test_mult_m4m4()
     return result;
 }
 
+static bool test_translate()
+{
+    bool result = true;
+    float f[16];
+    translate(f, -1.0, 2.0, 3.0);
+    float e[] = { 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
+                  0.0f, 0.0f, 1.0f, 0.0f, -1.0f, 2.0f, 3.0f, 1.0f };
+    for (int i = 0; i < 16; i++) {
+        CHECK_FLOAT(f[i], e[i]);
+    }
+    return result;
+}
+
 int main(int argc, char **argv)
 {
     bool result = true;
     CHECK_BOOL(test_frustum());
     CHECK_BOOL(test_mult_m4m4());
+    CHECK_BOOL(test_translate());
     return result ? 0 : 1;
 }
