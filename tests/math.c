@@ -42,7 +42,7 @@ static bool test_frustum()
     float e[] = { 5.0f, 0.0f, 0.0f, 0.0f, 0.0f, -0.01667f, 0.0f, 0.0f, 0.0f,
                   -0.0f, -1.051282f, -1.0f, 0.0f, 0.0f, -10.256411f, 0.0f };
     for (int i = 0; i < 16; i++) {
-        CHECK_FLOAT(f[i], e[i]);
+        CHECK_FLOAT_ARRAY_OFFSET(f, e, i);
     }
     return result;
 }
@@ -61,7 +61,7 @@ static bool test_mult_m4m4()
                   26.409998f, 73.960007f, -91.300003f, -66.340012f,
                   -11.750001f, 39.0f, -84.720001f, 48.48f };
     for (int i = 0; i < 16; i++) {
-        CHECK_FLOAT(d[i], e[i]);
+        CHECK_FLOAT_ARRAY_OFFSET(d, e, i);
     }
     return result;
 }
@@ -89,7 +89,7 @@ static bool test_translate()
     float e[] = { 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
                   0.0f, 0.0f, 1.0f, 0.0f, -1.0f, 2.0f, 3.0f, 1.0f };
     for (int i = 0; i < 16; i++) {
-        CHECK_FLOAT(f[i], e[i]);
+        CHECK_FLOAT_ARRAY_OFFSET(f, e, i);
     }
     return result;
 }
