@@ -6,6 +6,18 @@
 #include <stdbool.h>
 #include <stdio.h>
 
+#define CHECK_FLOAT_ARRAY_OFFSET(v, e, i)                               \
+    while (fabsf((e)[i] - (v)[i]) > fabsf(0.01 * (e)[i])) {             \
+        fprintf(stderr,                                                 \
+                "compare failed: value:    "                            \
+                "%f (" #v "[%d])\n"                                     \
+                "                expected: "                            \
+                "%f (" #e "[%d])\n",                                    \
+                (v)[i], i, (e)[i], i);                                  \
+        result = false;                                                 \
+        break;                                                          \
+    }
+
 #define CHECK_FLOAT(v, e)                                               \
     while (fabsf(e - v) > fabsf(0.01 * e)) {                            \
         fprintf(stderr, "compare failed: value:    %f (" #v ")\n"       \
@@ -54,6 +66,21 @@ static bool test_mult_m4m4()
     return result;
 }
 
+static bool test_rotate()
+{
+    bool result = true;
+    float f[16];
+    rotate(f, 1.0, -1.0, 2.0, 3.0);
+    float e[] = { 1.0f, 1.605018f, -3.062035f, 0.0f,
+                  -3.443808f, 2.379093f, 1.916715f, 0.0f,
+                  0.303849f, 3.599657f, 4.677582f, 0.0f,
+                  0.0f, 0.0f, 0.0f, 1.0f };
+    for (int i = 0; i < 16; i++) {
+        CHECK_FLOAT_ARRAY_OFFSET(f, e, i);
+    }
+    return result;
+}
+
 static bool test_translate()
 {
     bool result = true;
@@ -72,6 +99,7 @@ int main(int argc, char **argv)
     bool result = true;
     CHECK_BOOL(test_frustum());
     CHECK_BOOL(test_mult_m4m4());
+    CHECK_BOOL(test_rotate());
     CHECK_BOOL(test_translate());
     return result ? 0 : 1;
 }
