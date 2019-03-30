@@ -25,8 +25,8 @@ static struct gbm {
     struct gbm_surface *surf;
 } gbm = { 0, };
 
-bool
-load_drm_library(void)
+static bool
+load_gbm_library(void)
 {
     static bool tried = false;
     static void *libgbm = NULL;
@@ -52,8 +52,8 @@ load_drm_library(void)
     return true;
 }
 
-bool
-create_drm_window(void)
+static bool
+create_gbm_window(void)
 {
     gbm.fd = open("/dev/dri/renderD128", O_RDWR);
     if (gbm.fd < 0)
@@ -76,9 +76,9 @@ create_drm_window(void)
 }
 
 static bool
-init(void)
+init_gbm(void)
 {
-    if (!load_drm_library())
+    if (!load_gbm_library())
         return false;
     if (api_is_gl() && !load_egl_library())
         return false;
@@ -93,7 +93,7 @@ handle_events(void)
 static bool
 create_window()
 {
-    if (!create_drm_window())
+    if (!create_gbm_window())
         return false;
 
     if (api_is_gl()) {
@@ -118,7 +118,7 @@ swap_buffers()
 
 struct winsys winsys_gbm = {
     .name = "GBM",
-    .init = init,
+    .init = init_gbm,
     .create_window = create_window,
     .swap_buffers = swap_buffers,
     .handle_events = handle_events,
