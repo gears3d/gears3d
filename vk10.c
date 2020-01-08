@@ -46,6 +46,7 @@ DECL_PVKFN(vkCreateDevice);
 DECL_PVKFN(vkCreateWaylandSurfaceKHR);
 DECL_PVKFN(vkCreateXlibSurfaceKHR);
 DECL_PVKFN(vkEnumeratePhysicalDevices);
+DECL_PVKFN(vkGetPhysicalDeviceMemoryProperties);
 DECL_PVKFN(vkGetPhysicalDeviceProperties);
 DECL_PVKFN(vkGetPhysicalDeviceQueueFamilyProperties);
 DECL_PVKFN(vkGetPhysicalDeviceSurfaceCapabilitiesKHR);
@@ -345,6 +346,7 @@ static void init_vk_instance()
     if (xlib_wsi_supported)
         GET_I_PROC(vkCreateXlibSurfaceKHR);
     GET_I_PROC(vkEnumeratePhysicalDevices);
+    GET_I_PROC(vkGetPhysicalDeviceMemoryProperties);
     GET_I_PROC(vkGetPhysicalDeviceProperties);
     GET_I_PROC(vkGetPhysicalDeviceQueueFamilyProperties);
     GET_I_PROC(vkGetPhysicalDeviceSurfaceCapabilitiesKHR);
@@ -703,6 +705,23 @@ init_with_surface()
     /* TODO: check capabilities */
 }
 
+static uint32_t
+find_memory_idx(uint32_t allowed_indices, VkMemoryPropertyFlags props)
+{
+    VkPhysicalDeviceMemoryProperties dev_props;
+    VFN(vkGetPhysicalDeviceMemoryProperties)(phy_device, &dev_props);
+
+    uint32_t idx;
+    for (idx = 0; idx < dev_props.memoryTypeCount; idx++) {
+        if ((allowed_indices & (1 << idx)) &&
+            (dev_props.memoryTypes[idx].propertyFlags & props) == props) {
+            return idx;
+        }
+    }
+    assert(idx < dev_props.memoryTypeCount);
+    return dev_props.memoryTypeCount;
+}
+
 static void
 set_global_state()
 {
@@ -861,9 +880,11 @@ set_global_state()
 
     VkMemoryRequirements mem_req;
     VFN(vkGetBufferMemoryRequirements)(device, vert_buf, &mem_req);
-    uint32_t mem_ty_idx = ffs(mem_req.memoryTypeBits);
-    assert(mem_ty_idx != 0);
-    mem_ty_idx--;
+
+    uint32_t mem_ty_idx =
+        find_memory_idx(mem_req.memoryTypeBits,
+                        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+                        VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 
     VkMemoryAllocateInfo alloc_info = {
         .sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
@@ -907,9 +928,11 @@ set_global_state()
     assert(res == VK_SUCCESS);
 
     VFN(vkGetBufferMemoryRequirements)(device, uniform_buf, &mem_req);
-    mem_ty_idx = ffs(mem_req.memoryTypeBits);
-    assert(mem_ty_idx != 0);
-    mem_ty_idx--;
+
+    mem_ty_idx =
+        find_memory_idx(mem_req.memoryTypeBits,
+                        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+                        VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
     alloc_info.memoryTypeIndex = mem_ty_idx;
 
     alloc_info.allocationSize = uniform_data_size;
@@ -1265,12 +1288,14 @@ create_non_wsi_images(int width, int height, VkImage *images)
                                           &mem_req[image_num]);
     }
 
-    uint32_t mem_ty_idx = ffs(mem_req[0].memoryTypeBits);
-    assert(mem_ty_idx != 0);
-    mem_ty_idx--;
+    uint32_t mem_ty_idx =
+        find_memory_idx(mem_req[0].memoryTypeBits,
+                        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
     for (image_num = 1; image_num < NUM_IMAGES; image_num++) {
-        assert(ffs(mem_req[image_num].memoryTypeBits) - 1 == mem_ty_idx);
+        assert(find_memory_idx(mem_req[image_num].memoryTypeBits,
+                               VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT) ==
+               mem_ty_idx);
     }
 
     VkDeviceSize image_size = 0;
@@ -1349,9 +1374,9 @@ create_pipeline(int width, int height)
     VkMemoryRequirements depth_mem_req;
     VFN(vkGetImageMemoryRequirements)(device, depth_image, &depth_mem_req);
 
-    uint32_t mem_ty_idx = ffs(depth_mem_req.memoryTypeBits);
-    assert(mem_ty_idx != 0);
-    mem_ty_idx--;
+    uint32_t mem_ty_idx =
+        find_memory_idx(depth_mem_req.memoryTypeBits,
+                        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
     VkMemoryAllocateInfo depth_alloc_info = {
         .sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
@@ -1386,9 +1411,11 @@ create_pipeline(int width, int height)
 
         VkMemoryRequirements capture_mem_req;
         VFN(vkGetBufferMemoryRequirements)(device, capture_buf, &capture_mem_req);
-        mem_ty_idx = ffs(capture_mem_req.memoryTypeBits);
-        assert(mem_ty_idx != 0);
-        mem_ty_idx--;
+
+        uint32_t mem_ty_idx =
+            find_memory_idx(capture_mem_req.memoryTypeBits,
+                            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+                            VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 
         VkMemoryAllocateInfo capture_alloc_info = {
             .sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
