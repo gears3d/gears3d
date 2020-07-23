@@ -143,7 +143,7 @@ res_to_str(VkResult res)
     /* RES(VK_ERROR_INVALID_EXTERNAL_HANDLE_KHR); */
     /* RES(VK_RESULT_BEGIN_RANGE); */
     /* RES(VK_RESULT_END_RANGE); */
-    RES(VK_RESULT_RANGE_SIZE);
+    /* RES(VK_RESULT_RANGE_SIZE); */
     #undef RES
     default: return NULL;
     }
