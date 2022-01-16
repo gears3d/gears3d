@@ -113,7 +113,7 @@ load_egl_library(void)
     return true;
 }
 
-static void read_extensions(Display *dpy);
+static void read_extensions(EGLDisplay *dpy);
 static bool check_extension(const char *ext);
 #define EGL_VER_U32(major, minor) ((major << 16) | minor)
 static uint32_t egl_version = EGL_VER_U32(0, 0);
@@ -137,7 +137,7 @@ get_extension_procedure_address(void)
     }
 }
 
-static EGLContext ctx = None;
+static EGLContext ctx = EGL_NO_CONTEXT;
 static bool set_egl_swap_vsync(EGLDisplay *dpy, bool vsync);
 
 static bool
@@ -217,7 +217,7 @@ create_egl_context_attrib(void)
     ctx = eglCreateContext(dpy, config, EGL_NO_CONTEXT, attr);
     if (ctx == EGL_NO_CONTEXT)
         show_egl_error();
-    return (ctx != None);
+    return (ctx != EGL_NO_CONTEXT);
 }
 
 bool
@@ -233,8 +233,8 @@ create_egl_context(EGLNativeDisplayType ndpy, EGLNativeWindowType nwnd)
 
     surf = eglCreateWindowSurface(dpy, config, nwnd, NULL);
 
-    Bool cres = eglMakeCurrent(dpy, surf, surf, ctx);
-    if (cres != True)
+    EGLBoolean cres = eglMakeCurrent(dpy, surf, surf, ctx);
+    if (cres != EGL_TRUE)
         return false;
 
     set_egl_swap_vsync(dpy, gears_options.vsync);
@@ -245,7 +245,7 @@ create_egl_context(EGLNativeDisplayType ndpy, EGLNativeWindowType nwnd)
 bool
 egl_swap_buffers()
 {
-    assert(dpy != NULL && surf != None);
+    assert(dpy != NULL && surf != EGL_NO_CONTEXT);
     eglSwapBuffers(dpy, surf);
     gl_post_swap_buffer();
 
@@ -255,7 +255,7 @@ egl_swap_buffers()
 static const char *exts = NULL;
 
 static void
-read_extensions(Display *dpy)
+read_extensions(EGLDisplay *dpy)
 {
     if (exts == NULL) {
         exts = eglQueryString(dpy, EGL_EXTENSIONS);
