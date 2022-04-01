@@ -1669,7 +1669,7 @@ get_wsi_image()
     } while (res == VK_TIMEOUT);
 
     /* The window was probably resized, so skip this frame */
-    if (res == VK_ERROR_OUT_OF_DATE_KHR) {
+    if (res == VK_ERROR_OUT_OF_DATE_KHR || res == VK_SUBOPTIMAL_KHR) {
         return -1;
     }
 
