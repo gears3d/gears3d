@@ -202,6 +202,7 @@ static const VkCommandPoolCreateInfo cmd_pool_create_info = {
 
 #define GEARS 3
 #define NUM_IMAGES 2
+uint32_t num_images = 0;
 
 static VkInstance instance;
 
@@ -1226,7 +1227,7 @@ create_wsi_images(int width, int height, VkImage *images)
         .pNext = 0,
         .flags = 0,
         .surface = surface,
-        .minImageCount = NUM_IMAGES,
+        .minImageCount = 1,
         .imageFormat = VK_FORMAT_B8G8R8A8_UNORM,
         .imageColorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR,
         .imageExtent = { width, height },
@@ -1247,14 +1248,16 @@ create_wsi_images(int width, int height, VkImage *images)
                                     &swapchain);
     assert(res == VK_SUCCESS);
 
-    uint32_t image_count;
-    res = VFN(vkGetSwapchainImagesKHR)(device, swapchain, &image_count, NULL);
-    assert(res == VK_SUCCESS && image_count >= NUM_IMAGES);
-
-    image_count = NUM_IMAGES;
-    res = VFN(vkGetSwapchainImagesKHR)(device, swapchain, &image_count,
-                                       images);
+    uint32_t wsi_image_count;
+    res = VFN(vkGetSwapchainImagesKHR)(device, swapchain, &wsi_image_count,
+                                       NULL);
     assert(res == VK_SUCCESS);
+
+    num_images = NUM_IMAGES;
+    res = VFN(vkGetSwapchainImagesKHR)(device, swapchain, &num_images,
+                                       images);
+    assert(res == VK_SUCCESS ||
+           (res == VK_INCOMPLETE && num_images < wsi_image_count));
 }
 
 static void
@@ -1666,7 +1669,7 @@ get_wsi_image()
             if (timeouts > 20)
                 break;
         }
-    } while (res == VK_TIMEOUT);
+    } while (res == VK_TIMEOUT || index >= num_images);
 
     /* The window was probably resized, so skip this frame */
     if (res == VK_ERROR_OUT_OF_DATE_KHR || res == VK_SUBOPTIMAL_KHR) {
