@@ -1654,6 +1654,8 @@ post_draw(void)
     return true;
 }
 
+static void flush_one_render();
+
 static int32_t
 get_wsi_image()
 {
@@ -1662,14 +1664,17 @@ get_wsi_image()
     VkResult res;
 
     do {
-        res = VFN(vkAcquireNextImageKHR)(device, swapchain, UINT64_MAX,
+        res = VFN(vkAcquireNextImageKHR)(device, swapchain, 1000000,
                                          semaphore, VK_NULL_HANDLE, &index);
-        if (res == VK_TIMEOUT) {
+        if (res == VK_NOT_READY && submitted_render_count > 0) {
+            flush_one_render();
+        }
+        if (res == VK_TIMEOUT || res == VK_NOT_READY) {
             timeouts++;
             if (timeouts > 20)
                 break;
         }
-    } while (res == VK_TIMEOUT || index >= num_images);
+    } while (res == VK_TIMEOUT || res == VK_NOT_READY || index >= num_images);
 
     /* The window was probably resized, so skip this frame */
     if (res == VK_ERROR_OUT_OF_DATE_KHR || res == VK_SUBOPTIMAL_KHR) {
