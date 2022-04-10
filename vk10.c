@@ -202,7 +202,7 @@ static const VkCommandPoolCreateInfo cmd_pool_create_info = {
 
 #define GEARS 3
 #define NUM_IMAGES 10
-uint32_t num_images = 0;
+static uint32_t num_images = 0;
 
 static VkInstance instance;
 
