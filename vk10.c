@@ -203,6 +203,7 @@ static const VkCommandPoolCreateInfo cmd_pool_create_info = {
 #define GEARS 3
 #define NUM_IMAGES 10
 static uint32_t num_images = 0;
+static uint32_t max_in_flight_images = NUM_IMAGES;
 
 static VkInstance instance;
 
@@ -1265,6 +1266,11 @@ create_wsi_images(int width, int height, VkImage *images)
                                        images);
     assert(res == VK_SUCCESS ||
            (res == VK_INCOMPLETE && num_images < wsi_image_count));
+
+    if (num_images > surf_caps.minImageCount)
+        max_in_flight_images = num_images - surf_caps.minImageCount;
+    else
+        max_in_flight_images = 1;
 }
 
 static void
@@ -1783,7 +1789,7 @@ draw()
 
     pthread_mutex_lock(&win_size_lock);
 
-    if (submitted_render_count == num_images)
+    if (submitted_render_count >= max_in_flight_images)
         flush_one_render();
 
     if (submitted_render_count > 0)
