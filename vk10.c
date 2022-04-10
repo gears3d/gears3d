@@ -1281,14 +1281,14 @@ create_non_wsi_images(int width, int height, VkImage *images)
     num_images = NUM_IMAGES;
 
     int image_num;
-    for (image_num = 0; image_num < NUM_IMAGES; image_num++) {
+    for (image_num = 0; image_num < num_images; image_num++) {
         res = VFN(vkCreateImage)(device, &info, NULL, &images[image_num]);
         assert(res == VK_SUCCESS);
         non_wsi_images[image_num] = images[image_num];
     }
 
     VkMemoryRequirements mem_req[NUM_IMAGES];
-    for (image_num = 0; image_num < NUM_IMAGES; image_num++) {
+    for (image_num = 0; image_num < num_images; image_num++) {
         VFN(vkGetImageMemoryRequirements)(device, images[image_num],
                                           &mem_req[image_num]);
     }
@@ -1297,7 +1297,7 @@ create_non_wsi_images(int width, int height, VkImage *images)
         find_memory_idx(mem_req[0].memoryTypeBits,
                         VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
-    for (image_num = 1; image_num < NUM_IMAGES; image_num++) {
+    for (image_num = 1; image_num < num_images; image_num++) {
         assert(find_memory_idx(mem_req[image_num].memoryTypeBits,
                                VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT) ==
                mem_ty_idx);
@@ -1306,7 +1306,7 @@ create_non_wsi_images(int width, int height, VkImage *images)
     VkDeviceSize image_size = 0;
     uint32_t image_offsets[NUM_IMAGES];
     image_offsets[0] = 0;
-    for (image_num = 1; image_num < NUM_IMAGES; image_num++) {
+    for (image_num = 1; image_num < num_images; image_num++) {
         image_size = ALIGN(image_size, mem_req[image_num].alignment);
         image_offsets[image_num] = image_size;
         image_size += mem_req[image_num].size;
@@ -1320,7 +1320,7 @@ create_non_wsi_images(int width, int height, VkImage *images)
     res = VFN(vkAllocateMemory)(device, &alloc_info, NULL, &non_wsi_mem);
     assert(res == VK_SUCCESS);
 
-    for (image_num = 0; image_num < NUM_IMAGES; image_num++) {
+    for (image_num = 0; image_num < num_images; image_num++) {
         res = VFN(vkBindImageMemory)(device, images[image_num], non_wsi_mem,
                                      image_offsets[image_num]);
         assert(res == VK_SUCCESS);
@@ -1449,7 +1449,7 @@ create_pipeline(int width, int height)
     };
 
     int image_num;
-    for (image_num = 0; image_num < NUM_IMAGES; image_num++) {
+    for (image_num = 0; image_num < num_images; image_num++) {
 
         VkImageViewCreateInfo image_view_create_info = {
             .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
@@ -1716,7 +1716,7 @@ static int
 submitted_pos()
 {
     return
-        (next_render_pos + NUM_IMAGES - submitted_render_count) % NUM_IMAGES;
+        (next_render_pos + num_images - submitted_render_count) % num_images;
 }
 
 static void
@@ -1756,7 +1756,7 @@ check_for_complete_frames()
         post_draw();
 
         submitted_render_count--;
-        pos = (pos + 1) % NUM_IMAGES;
+        pos = (pos + 1) % num_images;
     }
 }
 
@@ -1776,7 +1776,7 @@ draw()
 
     pthread_mutex_lock(&win_size_lock);
 
-    if (submitted_render_count == NUM_IMAGES)
+    if (submitted_render_count == num_images)
         flush_one_render();
 
     if (submitted_render_count > 0)
@@ -1806,7 +1806,7 @@ draw()
 
     submitted_render_count++;
     in_flight_indices[next_render_pos] = index;
-    next_render_pos = (next_render_pos + 1) % NUM_IMAGES;
+    next_render_pos = (next_render_pos + 1) % num_images;
 
     pthread_mutex_unlock(&win_size_lock);
 }
