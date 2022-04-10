@@ -698,12 +698,6 @@ init_with_surface()
 
     free(formats);
     formats = NULL;
-
-    VkSurfaceCapabilitiesKHR surf_caps;
-    res = VFN(vkGetPhysicalDeviceSurfaceCapabilitiesKHR)(phy_device, surface,
-                                                         &surf_caps);
-    assert(res == VK_SUCCESS);
-    /* TODO: check capabilities */
 }
 
 static uint32_t
@@ -1213,6 +1207,11 @@ create_wsi_images(int width, int height, VkImage *images)
 {
     VkResult res;
 
+    VkSurfaceCapabilitiesKHR surf_caps;
+    res = VFN(vkGetPhysicalDeviceSurfaceCapabilitiesKHR)(phy_device, surface,
+                                                         &surf_caps);
+    assert(res == VK_SUCCESS);
+
     VkPresentModeKHR present_mode = VK_PRESENT_MODE_FIFO_KHR;
     if (!gears_options.vsync) {
         if (immediate_present_supported)
@@ -1221,13 +1220,21 @@ create_wsi_images(int width, int height, VkImage *images)
             present_mode = VK_PRESENT_MODE_MAILBOX_KHR;
     }
 
+    uint32_t request_num_images = NUM_IMAGES;
+    if (surf_caps.minImageCount > request_num_images)
+        request_num_images = surf_caps.minImageCount;
+    if (surf_caps.maxImageCount != 0 &&
+        surf_caps.maxImageCount < request_num_images)
+        request_num_images = surf_caps.maxImageCount;
+    assert(request_num_images <= NUM_IMAGES);
+
     uint32_t family_indices[] = { 0 };
     VkSwapchainCreateInfoKHR swapchain_create_info = {
         .sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,
         .pNext = 0,
         .flags = 0,
         .surface = surface,
-        .minImageCount = 1,
+        .minImageCount = request_num_images,
         .imageFormat = VK_FORMAT_B8G8R8A8_UNORM,
         .imageColorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR,
         .imageExtent = { width, height },
