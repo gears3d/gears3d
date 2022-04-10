@@ -1278,6 +1278,8 @@ create_non_wsi_images(int width, int height, VkImage *images)
         .initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
     };
 
+    num_images = NUM_IMAGES;
+
     int image_num;
     for (image_num = 0; image_num < NUM_IMAGES; image_num++) {
         res = VFN(vkCreateImage)(device, &info, NULL, &images[image_num]);
