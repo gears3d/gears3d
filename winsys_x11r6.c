@@ -32,6 +32,10 @@ load_x11r6_library(void)
 #include "winsys_x11r6_fn.h"
 #undef FNSYM
 
+    int (*init_threads)(void) = get_library_symbol(lib, "XInitThreads");
+    assert(init_threads != NULL);
+    init_threads();
+
     return true;
 }
 
