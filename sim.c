@@ -32,14 +32,20 @@ init_sim(void)
 }
 
 uint64_t
+get_real_time_ms(void)
+{
+    struct timespec now;
+    clock_gettime(CLOCK_MONOTONIC_RAW, &now);
+    return delta_ms(&start, &now);
+}
+
+uint64_t
 get_sim_time_ms(void)
 {
     if (sim_fixed_step) {
         return sim_fixed_time;
     } else {
-        struct timespec now;
-        clock_gettime(CLOCK_MONOTONIC_RAW, &now);
-        return delta_ms(&start, &now);
+        return get_real_time_ms();
     }
 }
 
