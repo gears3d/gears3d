@@ -1674,19 +1674,20 @@ static void flush_one_render();
 static int32_t
 get_wsi_image()
 {
-    uint32_t timeouts = 0;
     uint32_t index;
     VkResult res;
+    uint64_t start_ms = get_real_time_ms();
 
     do {
-        res = VFN(vkAcquireNextImageKHR)(device, swapchain, 1000000,
-                                         semaphore, VK_NULL_HANDLE, &index);
+        uint64_t wait_time = submitted_render_count > 0 ? 0 : 1000000;
+        res = VFN(vkAcquireNextImageKHR)(device, swapchain, wait_time,
+                                         VK_NULL_HANDLE, VK_NULL_HANDLE,
+                                         &index);
         if (res == VK_NOT_READY && submitted_render_count > 0) {
             flush_one_render();
         }
         if (res == VK_TIMEOUT || res == VK_NOT_READY) {
-            timeouts++;
-            if (timeouts > 20)
+            if (get_real_time_ms() - start_ms > 1100)
                 break;
         }
     } while (res == VK_TIMEOUT || res == VK_NOT_READY || index >= num_images);
