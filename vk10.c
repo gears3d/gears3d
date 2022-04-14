@@ -216,7 +216,7 @@ static VkCommandPool cmd_pool;
 static VkSurfaceKHR surface;
 static bool immediate_present_supported = false;
 static bool mailbox_present_supported = false;
-static VkSemaphore semaphore;
+static VkSemaphore semaphores[NUM_IMAGES];
 static VkFence fences[NUM_IMAGES];
 static bool using_wsi = false;
 static bool wayland_wsi_supported = false;
@@ -497,14 +497,14 @@ set_window_attributes()
     VkSemaphoreCreateInfo semaphore_create_info = {
         .sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO,
     };
-    res = VFN(vkCreateSemaphore)(device, &semaphore_create_info, NULL,
-                                 &semaphore);
-    assert(res == VK_SUCCESS);
 
     VkFenceCreateInfo fence_create_info = {
         .sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO
     };
     for (int i = 0; i < NUM_IMAGES; i++) {
+        res = VFN(vkCreateSemaphore)(device, &semaphore_create_info, NULL,
+                                     &semaphores[i]);
+        assert(res == VK_SUCCESS);
         res = VFN(vkCreateFence)(device, &fence_create_info, NULL, &fences[i]);
         assert(res == VK_SUCCESS);
     }
@@ -1708,6 +1708,8 @@ wsi_present(uint32_t index)
     VkResult res;
     VkPresentInfoKHR present_info = {
         .sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
+        .waitSemaphoreCount = 1,
+        .pWaitSemaphores = &semaphores[index],
         .swapchainCount = 1,
         .pSwapchains = &swapchain,
         .pImageIndices = &index,
@@ -1742,11 +1744,6 @@ flush_one_render()
         VFN(vkWaitForFences)(device, 1, &fences[index], true, INT64_MAX);
     assert(res == VK_SUCCESS);
 
-    VFN(vkResetFences)(device, 1, &fences[index]);
-
-    if (using_wsi)
-        wsi_present(index);
-
     post_draw();
 
     submitted_render_count--;
@@ -1761,11 +1758,6 @@ check_for_complete_frames()
         VkResult res = VFN(vkGetFenceStatus)(device, fences[index]);
         if (res == VK_NOT_READY)
             return;
-
-        VFN(vkResetFences)(device, 1, &fences[index]);
-
-        if (using_wsi)
-            wsi_present(index);
 
         post_draw();
 
@@ -1809,14 +1801,24 @@ draw()
         VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
     VkSubmitInfo submit_info = {
         .sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
-        .waitSemaphoreCount = using_wsi ? 1 : 0,
-        .pWaitSemaphores = &semaphore,
+        .signalSemaphoreCount = using_wsi ? 1 : 0,
+        .pSignalSemaphores = &semaphores[index],
         .pWaitDstStageMask = &state_flags,
         .commandBufferCount = 1,
         .pCommandBuffers = &cmd_buffers[index],
     };
-    res = VFN(vkQueueSubmit)(queue, 1, &submit_info, fences[index]);
+    res = VFN(vkQueueSubmit)(queue, 1, &submit_info,
+                             using_wsi ? VK_NULL_HANDLE : fences[index]);
     assert(res == VK_SUCCESS);
+
+    if (using_wsi) {
+        wsi_present(index);
+        VkSubmitInfo submit_info = {
+            .sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
+        };
+        res = VFN(vkQueueSubmit)(queue, 1, &submit_info,
+                                 fences[index]);
+    }
 
     submitted_render_count++;
     in_flight_indices[next_render_pos] = index;
