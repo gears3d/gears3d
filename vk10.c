@@ -1716,7 +1716,7 @@ wsi_present(uint32_t index)
         .pResults = &res,
     };
     res = VFN(vkQueuePresentKHR)(queue, &present_info);
-    assert(res == VK_SUCCESS);
+    assert(res == VK_SUCCESS || res == VK_SUBOPTIMAL_KHR);
 }
 
 static int32_t
